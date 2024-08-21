@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+
+    <title>Title</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/assets/css/http_unpkg.com_bytemd_dist_index.css" />
+    <link rel="stylesheet" href="https://unpkg.com/github-markdown-css" />
+    <script defer src="/assets/js/alpine.js"></script>
+    <script src="/assets/js/wasm_exec.js"></script>
+    <script>
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch("/assets/js/md2html.wasm"), go.importObject)
+            .then(result => go.run(result.instance))
+            .catch(err => console.error("Failed to load WASM:", err));
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.21.2/min/vs/loader.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.conditional.min.css">
+    <style>
+        [data-theme=light],
+        :root:not([data-theme=dark]) {
+            --pico-accordion-active-summary-color: #0009;
+            --pico-text-selection-color: #E7B6EE33;
+            --pico-primary: #943DA5;
+            --pico-font-family-sans-serif: Inter, system-ui, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, Helvetica, Arial, "Helvetica Neue", sans-serif, var(--pico-font-family-emoji);
+            --pico-font-size: 100%;
+            /* Original: 100% */
+            --pico-line-height: 1.25;
+            /* Original: 1.5 */
+            --pico-form-element-spacing-vertical: 0.5rem;
+            /* Original: 1rem */
+            --pico-form-element-spacing-horizontal: 1.0rem;
+            /* Original: 1.25rem */
+            --pico-border-radius: 0.375rem;
+            /* Original: 0.25rem */
+        }
+
+        body{
+            &>header{
+                position: sticky;
+                top: 0;
+                background-color: white;
+                box-shadow: 0 0 10px gainsboro;
+                z-index: 10;
+                &>nav{
+                    padding: 0 20px 0 20px;
+                }
+            }
+            &>main{
+                margin:20px 0 20px 0;
+                display: flex;
+                justify-content: space-around;
+                &>.EasyMDEContainer{
+                    max-width: 600px;
+                }
+                &>article{
+                    width: 21cm;
+                    height: 29.7cm;
+                    box-shadow: 0 0 10px gray;
+                    z-index: 9;
+                }
+            }
+
+            dialog{
+                backdrop-filter:none;
+                background-color: transparent;
+            }
+        }
+    </style>
+</head>
+<body x-data="PrivaCV">
+
+<header class="pico">
+    <nav>
+        <ul>
+            <li><strong>Home</strong></li>
+        </ul>
+        <ul>
+            <li><a>IconList</a></li>
+            <li><a @click="CSSEditor=true">CustomCSS</a></li>
+            <li><a>ExportPDF</a></li>
+            <li><a href="https://github.com/BapiGso/PrivaCV" target="_blank">Github</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <textarea id="editor" aria-label></textarea>
+    <article x-html="CVcontent">
+
+    </article>
+</main>
+
+<div class="pico">
+    <dialog :open="CSSEditor" >
+        <article>
+            <header>
+                <button rel="prev" @click="CSSEditor=false"></button>
+                <p><strong><a href="https://developer.mozilla.org/en-US/docs/Learn/CSS/First_steps" target="_blank">You need to understand some basic CSS knowledge</a></strong></p>
+            </header>
+            <div id="container" style="width: 100%; height: 500px;"></div>
+        </article>
+    </dialog>
+</div>
+
+
+
+<script>
+    document.addEventListener('alpine:init',
+        () => {
+        Alpine.data('PrivaCV', () => ({
+            init() {
+                const easymde = new EasyMDE({
+                    element: document.getElementById('editor'),
+                });
+                easymde.codemirror.on('change', () => {
+                    console.log(easymde.value())
+                    console.log(window.md2html(easymde.value()))
+                    this.CVcontent = window.md2html(easymde.value());
+                });
+
+                require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.21.2/min/vs' }});
+                require(['vs/editor/editor.main'], function() {
+                    var editor = monaco.editor.create(document.getElementById('container'), {
+                        value: "body {\n  background-color: #f0f0f0;\n}",
+                        language: 'css'
+                    });
+                });
+            },
+            CSSEditor:false,
+            CVcontent:'',
+    }))
+    })
+</script>

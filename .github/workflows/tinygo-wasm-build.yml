@@ -1,0 +1,44 @@
+name: TinyGo WASM Build and PR
+
+on:
+  push:
+    branches:
+      - main  # 或者你想触发此操作的分支
+    paths:
+      - '**.go'  # 当 Go 文件发生变化时触发
+
+jobs:
+  build-and-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'  # 使用你需要的 Go 版本
+
+      - name: Install TinyGo
+        run: |
+          wget https://github.com/tinygo-org/tinygo/releases/download/v0.29.0/tinygo_0.29.0_amd64.deb
+          sudo dpkg -i tinygo_0.29.0_amd64.deb
+
+      - name: Build WASM
+        run: |
+          mkdir -p assets/wasm
+          tinygo build -o assets/wasm/main.wasm -target wasm ./path/to/your/main.go
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Update WASM build
+          title: Update WASM build
+          body: |
+            This PR updates the WASM build in the assets/wasm folder.
+            
+            Automated changes by GitHub Action.
+          branch: update-wasm-build
+          base: main  # 目标分支
+          delete-branch: true
