@@ -53,22 +53,21 @@
                 }
             }
             &>main{
-                padding: 30px;
-                &>ul{
-                    &>li{
-                        display: flex;
-
-                        &>section{
-                            width: 21cm;
-                            height: 29.7cm;
-                            zoom: 0.2;
-                            box-shadow: 0 0 20px gainsboro;
-                        }
-                        &>article{
-                            margin: 0 0 0 20px ;
-                        }
-                    }
+                margin:20px 0 20px 0;
+                display: flex;
+                justify-content: space-around;
+                &>.EasyMDEContainer{
+                    max-width: 600px;
                 }
+                &>article{
+                    width: 21cm;
+                    height: 29.7cm;
+                    box-shadow: 0 0 10px gray;
+                    z-index: 9;
+                }
+            }
+            & .pico article{
+                overflow: hidden;
             }
         }
     </style>
@@ -78,56 +77,70 @@
 <header class="pico">
     <nav>
         <ul>
-            <li><strong>PrivaCV</strong></li>
+            <li><strong>Home</strong></li>
+            <li><input aria-label></li>
         </ul>
         <ul>
-            <li><a>Help</a></li>
+            <li><a>IconList</a></li>
+            <li><a @click="initMonacoEditor()">CustomCSS</a></li>
+            <li><a>ExportPDF</a></li>
             <li><a href="https://github.com/BapiGso/PrivaCV" target="_blank">Github</a></li>
         </ul>
     </nav>
 </header>
 
-
 <main>
-    <h2>ResumeList</h2>
-    <ul>
-    <template>
+    <textarea id="editor" aria-label></textarea>
+    <article x-html="CVcontent">
 
-    </template>
-        <li>
-                <section>
-                    <h1>test</h1>
-                </section>
-                <article>
-                    <header>
-                        <h3>空白简历</h3>
-                        <small>更新于：11-08 15:14</small>
-                    </header>
-                    <footer>
-                        <p><a>编辑</a></p>
-                        <p><a>复制</a></p>
-                        <p><a>删除</a></p>
-                    </footer>
-                </article>
-        </li>
-    </ul>
-    <h2>TemplateList</h2>
-    <ul>
-        <template>
-
-        </template>
-    </ul>
+    </article>
 </main>
+
+<div class="pico">
+    <dialog :open="CSSEditor" >
+        <article>
+            <header>
+                <button rel="prev" @click="CSSEditor=false"></button>
+                <p><strong><a href="https://developer.mozilla.org/en-US/docs/Learn/CSS/First_steps" target="_blank">You need to understand some basic CSS knowledge</a></strong></p>
+            </header>
+            <div id="container" style="width: 100%; height: 300px;"></div>
+        </article>
+    </dialog>
+</div>
+
 
 
 <script>
     document.addEventListener('alpine:init',
         () => {
-            Alpine.data('PrivaCV', () => ({
-                init() {
+        Alpine.data('PrivaCV', () => ({
+            init() {
+                const easymde = new EasyMDE({
+                    element: document.getElementById('editor'),
+                });
+                easymde.codemirror.on('change', () => {
+                    // console.log(easymde.value())
+                    // console.log(window.md2html(easymde.value()))
+                    this.CVcontent = window.md2html(easymde.value());
+                });
+            },
+            initMonacoEditor(){
+                this.CSSEditor=true
+                if (!window.monaco){
+                    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.21.2/min/vs' }});
+                    require(['vs/editor/editor.main'], function() {
+                        let editor = monaco.editor.create(document.getElementById('container'), {
+                            value: "body {\n  background-color: #f0f0f0;\n}",
+                            language: 'css',
+                            minimap: {enabled: false}, // 禁用小地图
+                        });
+                    });
+                }
 
-                },
-                ResumeList:localStorage.ResumeList||[],
-            }))
-        })
+                // monaco.editor.getModels()[0].getValue()
+            },
+            CSSEditor:false,
+            CVcontent:'',
+    }))
+    })
 </script>

@@ -1,11 +1,8 @@
 name: TinyGo WASM Build and PR
 
 on:
-  push:
-    branches:
-      - main  # 或者你想触发此操作的分支
-    paths:
-      - '**.go'  # 当 Go 文件发生变化时触发
+  workflow_dispatch:
+  # 可以添加输入参数，如果需要的话
 
 jobs:
   build-and-pr:
@@ -26,8 +23,8 @@ jobs:
 
       - name: Build WASM
         run: |
-          mkdir -p assets/wasm
-          tinygo build -o assets/wasm/main.wasm -target wasm ./path/to/your/main.go
+          mkdir -p assets/js
+          tinygo build -o assets/js/md2html.wasm -target wasm ./cmd/wasm.go
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
@@ -36,7 +33,7 @@ jobs:
           commit-message: Update WASM build
           title: Update WASM build
           body: |
-            This PR updates the WASM build in the assets/wasm folder.
+            This PR updates the WASM build in the assets/js folder.
             
             Automated changes by GitHub Action.
           branch: update-wasm-build
