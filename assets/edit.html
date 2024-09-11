@@ -4,20 +4,9 @@
     <title>Title</title>
     <meta charset="UTF-8">
     <script defer src="/assets/js/alpine.js"></script>
-    <script src="/assets/js/wasm_exec.js"></script>
-    <script>
-        const go = new Go();
-        WebAssembly.instantiateStreaming(fetch("/assets/js/md2html.wasm"), go.importObject)
-            .then(result => go.run(result.instance))
-            .catch(err => console.error("Failed to load WASM:", err));
-    </script>
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.21.2/min/vs/loader.js"></script>
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.conditional.min.css">
+    <script src="/assets/js/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.51.0/min/vs/loader.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <style>
         [data-theme=light],
         :root:not([data-theme=dark]) {
@@ -39,74 +28,65 @@
             /* Original: 0.375rem */
             --pico-modal-overlay-background-color: transparent;
             /* Original: rgba(232, 234, 237, 0.75) */
+            --pico-nav-element-spacing-vertical:0.7em;
+            /* Original: 1em */
         }
 
         body{
-            &>header{
+            &>nav{
                 position: sticky;
                 top: 0;
                 background-color: white;
                 box-shadow: 0 0 10px gainsboro;
                 z-index: 10;
-                &>nav{
-                    padding: 0 20px 0 20px;
-                }
+                padding: 0 20px 0 20px;
             }
             &>main{
                 margin:20px 0 20px 0;
                 display: flex;
                 justify-content: space-around;
-                &>.EasyMDEContainer{
-                    max-width: 600px;
+                &>section{
+                    & #editor{
+
+                    }
                 }
-                &>article{
-                    width: 21cm;
-                    height: 29.7cm;
+                &>iframe{
+                    width: 25.1cm;
+                    height: 33.8cm;
                     box-shadow: 0 0 10px gray;
                     z-index: 9;
+                    border: none;
+                    overflow: hidden;
+                    zoom: 0.7;
                 }
-            }
-            & .pico article{
-                overflow: hidden;
             }
         }
     </style>
 </head>
 <body x-data="PrivaCV">
 
-<header class="pico">
-    <nav>
-        <ul>
-            <li><strong>Home</strong></li>
-            <li><input aria-label></li>
-        </ul>
-        <ul>
-            <li><a>IconList</a></li>
-            <li><a @click="initMonacoEditor()">CustomCSS</a></li>
-            <li><a>ExportPDF</a></li>
-            <li><a href="https://github.com/BapiGso/PrivaCV" target="_blank">Github</a></li>
-        </ul>
-    </nav>
-</header>
+
+<nav>
+    <ul>
+        <li><strong>Home</strong></li>
+        <li><input aria-label></li>
+    </ul>
+    <ul>
+        <li><a>IconList</a></li>
+        <li><a>ExportPDF</a></li>
+        <li><a href="https://github.com/BapiGso/PrivaCV" target="_blank">Github</a></li>
+    </ul>
+</nav>
+
 
 <main>
-    <textarea id="editor" aria-label></textarea>
-    <article x-html="CVcontent">
+    <section>
+        <div id="editor" style="width: 500px;height: 500px"></div>
+    </section>
 
-    </article>
+    <iframe :srcdoc="CVcontent" scrolling="no"></iframe>
 </main>
 
-<div class="pico">
-    <dialog :open="CSSEditor" >
-        <article>
-            <header>
-                <button rel="prev" @click="CSSEditor=false"></button>
-                <p><strong><a href="https://developer.mozilla.org/en-US/docs/Learn/CSS/First_steps" target="_blank">You need to understand some basic CSS knowledge</a></strong></p>
-            </header>
-            <div id="container" style="width: 100%; height: 300px;"></div>
-        </article>
-    </dialog>
-</div>
 
 
 
@@ -114,32 +94,30 @@
     document.addEventListener('alpine:init',
         () => {
         Alpine.data('PrivaCV', () => ({
-            init() {
-                const easymde = new EasyMDE({
-                    element: document.getElementById('editor'),
-                });
-                easymde.codemirror.on('change', () => {
-                    // console.log(easymde.value())
-                    // console.log(window.md2html(easymde.value()))
-                    this.CVcontent = window.md2html(easymde.value());
-                });
-            },
-            initMonacoEditor(){
-                this.CSSEditor=true
-                if (!window.monaco){
-                    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.21.2/min/vs' }});
-                    require(['vs/editor/editor.main'], function() {
-                        let editor = monaco.editor.create(document.getElementById('container'), {
-                            value: "body {\n  background-color: #f0f0f0;\n}",
-                            language: 'css',
-                            minimap: {enabled: false}, // 禁用小地图
-                        });
-                    });
-                }
+            init(){
+                require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.51.0/min/vs' } });
 
-                // monaco.editor.getModels()[0].getValue()
+                require(['vs/editor/editor.main'], ()=> {
+                    monaco.languages.css.cssDefaults.setDiagnosticsOptions({
+                        validate: false, // 禁用代码纠错
+                    });
+
+                    let editor = monaco.editor.create(document.getElementById('editor'), {
+                        value: "<style>\n article {\n  background-color: #f0f0f0;\n}</style>",
+                        language: 'css',
+                        minimap: { enabled: false }, // 禁用小地图
+                    });
+
+                    // 监听编辑器内容变化事件
+                    editor.onDidChangeModelContent((event) => {
+                        this.CVcontent = marked.parse(editor.getValue());
+                        // console.log(this.CVcontent);
+                    });
+                });
+                this.$watch('CVcontent', (newValue) => {
+                    console.log('CVcontent updated:', newValue);
+                });
             },
-            CSSEditor:false,
             CVcontent:'',
     }))
     })
