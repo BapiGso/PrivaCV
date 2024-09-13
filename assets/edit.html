@@ -13,6 +13,7 @@
             --pico-accordion-active-summary-color: #0009;
             --pico-text-selection-color: #E7B6EE33;
             --pico-primary: #943DA5;
+            /*noinspection CssUnresolvedCustomProperty*/
             --pico-font-family-sans-serif: Inter, system-ui, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, Helvetica, Arial, "Helvetica Neue", sans-serif, var(--pico-font-family-emoji);
             --pico-font-size: 100%;
             /* Original: 100% */
@@ -33,22 +34,75 @@
         }
 
         body{
+            &>section{
+                width: 100%;
+                height: 100%;
+                position: fixed;
+                transition: transform 0.5s ease-in-out;
+                backdrop-filter: blur(10px); /* 设置背景模糊效果 */
+                background-color: rgba(255, 255, 255, 0.5); /* 可选：设置背景颜色和透明度 */
+                z-index: 100;
+                padding: 50px 20px 50px 20px;
+                &>#ResumeList {
+                    display: flex;
+                    & > li {
+                        display: flex;
+                        width: 350px;
+                        & > iframe {
+                            width: 254mm;
+                            height: 340mm;
+                            zoom: 0.15;
+                            background-color: white;
+                            /*noinspection CssUnresolvedCustomProperty*/
+                            box-shadow: var(--pico-card-box-shadow);
+                        }
+                        & > article {
+                            margin: 0 0 0 20px;
+                            box-shadow: none;
+                            & > header,
+                            & > footer {
+                                border: none;
+                                background-color: white;
+                            }
+                        }
+                    }
+                }
+                &>#TemplateList {
+                    display: flex;
+                    &>li {
+                        width: 150px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        background-color: white;
+                        margin: 0 20px 0 20px;
+                        & > iframe {
+                            width: 254mm;
+                            height: 340mm;
+                            zoom: 0.15;
+                            /*noinspection CssUnresolvedCustomProperty*/
+                            box-shadow: var(--pico-card-box-shadow);
+                        }
+                    }
+                }
+            }
             &>nav{
                 position: sticky;
                 top: 0;
-                background-color: white;
+                background-color: #f4e9f4;
                 box-shadow: 0 0 10px gainsboro;
                 z-index: 10;
                 padding: 0 20px 0 20px;
+                & fieldset{
+                    margin-bottom: 0!important;
+                }
             }
             &>main{
                 margin:20px 0 20px 0;
                 display: flex;
                 justify-content: space-around;
-                &>section{
-                    & #editor{
+                &>#editor{
 
-                    }
                 }
                 &>iframe{
                     width: 25.1cm;
@@ -63,31 +117,65 @@
         }
     </style>
 </head>
-<body x-data="PrivaCV">
+<body x-data="PrivaCV" :style="!EditPage && {overflow:'hidden'}">
 
+<section :style="EditPage && {transform: 'translateY(-100%)'}">
+    <h3>ResumeList</h3>
+    <ul id="ResumeList">
+        <template x-for="(val, index) in resumeList">
+            <li>
+                <iframe :srcdoc="marked.parse(val.content)" x-init="console.log(val)"></iframe>
+                <article>
+                    <header>
+                        <h4 x-text="val.name"></h4>
+                        <small x-text="val.modified"></small>
+                    </header>
+                    <footer>
+                        <p><a href @click.prevent="edit(val)">编辑</a></p>
+                        <p><a href @click.prevent="copy(val)">复制</a></p>
+                        <p><a href @click.prevent="del(index)">删除</a></p>
+                    </footer>
+                </article>
+            </li>
+        </template>
+    </ul>
+    <h3>TemplateList</h3>
+    <ul id="TemplateList">
+        <template  x-for="val in tempList" x-init="await loadTempList()">
+            <li>
+                <iframe :srcdoc="marked.parse(val.content)" x-init="console.log('cv内容为',val.content)"></iframe>
+                <a x-text="`使用${val.name}`" href @click.prevent="edit(val)"></a>
+            </li>
+        </template>
+    </ul>
+
+
+</section>
 
 <nav>
     <ul>
-        <li><strong>Home</strong></li>
-        <li><input aria-label></li>
+        <li @click="EditPage=false"><strong>Home</strong></li>
+        <li>
+            <form  @submit.prevent="saveResume()">
+                <fieldset role="group">
+                    <input x-model="CV.name" aria-label required>
+                    <input type="submit" value="save" >
+                </fieldset>
+            </form>
+        </li>
     </ul>
     <ul>
         <li><a>IconList</a></li>
-        <li><a>ExportPDF</a></li>
+        <li><a href @click.prevent="exportPDF">ExportPDF</a></li>
         <li><a href="https://github.com/BapiGso/PrivaCV" target="_blank">Github</a></li>
     </ul>
 </nav>
 
 
 <main>
-    <section>
-        <div id="editor" style="width: 500px;height: 500px"></div>
-    </section>
-
-    <iframe :srcdoc="CVcontent" scrolling="no"></iframe>
+    <div id="editor" style="width: 700px;height: 500px"></div>
+    <iframe id="CVPrinter" :srcdoc="marked.parse(CV.content)" scrolling="no"></iframe>
 </main>
-
-
 
 
 <script>
@@ -102,23 +190,72 @@
                         validate: false, // 禁用代码纠错
                     });
 
-                    let editor = monaco.editor.create(document.getElementById('editor'), {
-                        value: "<style>\n article {\n  background-color: #f0f0f0;\n}</style>",
+                    window.editor = monaco.editor.create(document.getElementById('editor'), {
+                        value: this.CV.content,
                         language: 'css',
                         minimap: { enabled: false }, // 禁用小地图
                     });
 
                     // 监听编辑器内容变化事件
                     editor.onDidChangeModelContent((event) => {
-                        this.CVcontent = marked.parse(editor.getValue());
-                        // console.log(this.CVcontent);
+                        console.log("编辑器内容变更为",editor.getValue())
+                        this.CV.content = editor.getValue()
                     });
                 });
-                this.$watch('CVcontent', (newValue) => {
-                    console.log('CVcontent updated:', newValue);
+                this.$watch('resumeList', (newValue) => {
+                    localStorage.setItem("resumeList",JSON.stringify(newValue))
                 });
+
             },
-            CVcontent:'',
-    }))
+            EditPage:false,
+            CV:{name:'', content:'',},
+            tempList: [],
+            resumeList:JSON.parse(localStorage.getItem("resumeList"))||[],
+            async loadTempList(){
+                const nameList=["test.md"]
+                for (let name of nameList) {
+                    this.tempList.push({
+                        name:name,
+                        content:await (await fetch(`/assets/temp/${name}`)).text()
+                    })
+                }
+            },
+            saveResume() {
+                const newResume = {
+                    name: this.CV.name,
+                    content: editor.getValue(),
+                    modified: new Date().toISOString().split('T')[0],
+                };
+                // 检查是否存在相同 name 的元素
+                const existingIndex = this.resumeList.findIndex(resume => resume.name === newResume.name);
+                if (existingIndex !== -1) {
+                    // 如果存在相同 name 的元素，则更新该元素
+                    this.resumeList[existingIndex] = newResume;
+                    alert("Resume updated successfully");
+                } else {
+                    // 如果不存在相同 name 的元素，则添加新元素
+                    this.resumeList.push(newResume);
+                    alert("Resume saved successfully");
+                }
+            },
+            exportPDF(){
+                document.getElementById("CVPrinter").contentWindow.print();
+            },
+            edit(val){
+                this.EditPage=true;
+                this.CV=val;
+                editor.getModel().setValue(this.CV.content);
+            },
+            copy(val){
+                this.resumeList.push({
+                        name: val.name+' 副本',
+                        content: val.content,
+                        modified: val.modified,
+                })
+            },
+            del(index){
+                this.resumeList.splice(index, 1);
+            }
+        }))
     })
 </script>
