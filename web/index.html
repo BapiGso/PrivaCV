@@ -3,8 +3,8 @@
 <head>
     <title>Title</title>
     <meta charset="UTF-8">
-    <script defer src="/assets/js/alpine.js"></script>
-    <script src="/assets/js/marked.min.js"></script>
+    <script defer src="./js/alpine.js"></script>
+    <script src="./js/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.51.0/min/vs/loader.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <style>
@@ -105,8 +105,8 @@
 
                 }
                 &>iframe{
-                    width: 25.1cm;
-                    height: 33.8cm;
+                    width: 25.0cm;
+                    height: 33.7cm;
                     box-shadow: 0 0 10px gray;
                     z-index: 9;
                     border: none;
@@ -165,6 +165,8 @@
         </li>
     </ul>
     <ul>
+        
+        <li><a>DataURL</a></li>
         <li><a>IconList</a></li>
         <li><a href @click.prevent="exportPDF">ExportPDF</a></li>
         <li><a href="https://github.com/BapiGso/PrivaCV" target="_blank">Github</a></li>
@@ -216,7 +218,7 @@
                 for (let name of nameList) {
                     this.tempList.push({
                         name:name,
-                        content:await (await fetch(`/assets/temp/${name}`)).text()
+                        content:await (await fetch(`./temp/${name}`)).text()
                     })
                 }
             },
