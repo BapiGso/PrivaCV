@@ -3,9 +3,9 @@
 
 ## Features
 
-- **隐私保护**：数据仅在本地处理，无需担心隐私泄露。
-- **简单易用**：通过 [Markdown](https://www.markdownguide.org/basic-syntax/) 语法撰写内容，使用 [CSS](https://developer.mozilla.org/zh-CN/docs/Web/CSS) 进行美化。
-- **模板支持**：提供多种默认模板，您可以根据个人需求进行简单修改，轻松创建美观的简历。
+- **隐私保护**：数据纯前端本地处理，无需担心隐私泄露。
+- **有点不简单易用**：通过 [Markdown](https://www.markdownguide.org/basic-syntax/) 语法撰写内容，使用 [CSS](https://developer.mozilla.org/zh-CN/docs/Web/CSS) 进行美化。
+- **好在有模板支持**：提供多种默认模板，您可以根据个人需求进行简单修改，轻松创建美观的简历。
 
 # Author
 [SMOE](https://smoe.cc/)

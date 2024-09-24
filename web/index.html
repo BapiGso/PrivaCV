@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-Hans">
 <head>
-    <title>Title</title>
+    <title>PrivaCV</title>
     <meta charset="UTF-8">
-    <script defer src="./js/alpine.js"></script>
-    <script src="./js/marked.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.51.0/min/vs/loader.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <style>
@@ -31,12 +31,15 @@
             /* Original: rgba(232, 234, 237, 0.75) */
             --pico-nav-element-spacing-vertical:0.7em;
             /* Original: 1em */
+            /*--pico-typography-spacing-vertical: 0.8rem;*/
+            /* Original: 1em */
         }
 
         body{
             &>section{
                 width: 100%;
                 height: 100%;
+                overflow-y: scroll;
                 position: fixed;
                 transition: transform 0.5s ease-in-out;
                 backdrop-filter: blur(10px); /* 设置背景模糊效果 */
@@ -45,9 +48,10 @@
                 padding: 50px 20px 50px 20px;
                 &>#ResumeList {
                     display: flex;
+                    flex-wrap: wrap;
                     & > li {
                         display: flex;
-                        width: 350px;
+                        width: 22vw;
                         & > iframe {
                             width: 254mm;
                             height: 340mm;
@@ -59,16 +63,13 @@
                         & > article {
                             margin: 0 0 0 20px;
                             box-shadow: none;
-                            & > header,
-                            & > footer {
-                                border: none;
-                                background-color: white;
-                            }
+                            background-color: transparent;
                         }
                     }
                 }
                 &>#TemplateList {
                     display: flex;
+                    flex-wrap: wrap;
                     &>li {
                         width: 150px;
                         display: flex;
@@ -126,15 +127,11 @@
             <li>
                 <iframe :srcdoc="marked.parse(val.content)" x-init="console.log(val)"></iframe>
                 <article>
-                    <header>
-                        <h4 x-text="val.name"></h4>
-                        <small x-text="val.modified"></small>
-                    </header>
-                    <footer>
-                        <p><a href @click.prevent="edit(val)">编辑</a></p>
-                        <p><a href @click.prevent="copy(val)">复制</a></p>
-                        <p><a href @click.prevent="del(index)">删除</a></p>
-                    </footer>
+                    <p><b x-text="val.name"></b></p>
+                    <small x-text="val.modified"></small>
+                    <p><a href @click.prevent="edit(val)">编辑</a></p>
+                    <p><a href @click.prevent="copy(val)">复制</a></p>
+                    <p><a href @click.prevent="del(index)">删除</a></p>
                 </article>
             </li>
         </template>
@@ -175,7 +172,7 @@
 
 
 <main>
-    <div id="editor" style="width: 700px;height: 500px"></div>
+    <div id="editor" style="width: 700px"></div>
     <iframe id="CVPrinter" :srcdoc="marked.parse(CV.content)" scrolling="no"></iframe>
 </main>
 
@@ -195,15 +192,24 @@
                     window.editor = monaco.editor.create(document.getElementById('editor'), {
                         value: this.CV.content,
                         language: 'css',
+                        wordWrap: 'on',
                         minimap: { enabled: false }, // 禁用小地图
+                        scrollBeyondLastLine: false,
+                        // theme:'vs-dark'
                     });
 
                     // 监听编辑器内容变化事件
                     editor.onDidChangeModelContent((event) => {
-                        console.log("编辑器内容变更为",editor.getValue())
-                        this.CV.content = editor.getValue()
+                        console.log("编辑器内容变更为",editor.getValue());
+                        this.CV.content = editor.getValue();
+                        const height = editor.getModel().getLineCount() * 19.5;
+                        // const visibleRanges = editor.getVisibleRanges()[0].;
+                        document.getElementById('editor').style.height = `${height}px`;
+                        editor.layout();
                     });
+
                 });
+
                 this.$watch('resumeList', (newValue) => {
                     localStorage.setItem("resumeList",JSON.stringify(newValue))
                 });
@@ -214,7 +220,7 @@
             tempList: [],
             resumeList:JSON.parse(localStorage.getItem("resumeList"))||[],
             async loadTempList(){
-                const nameList=["test.md"]
+                const nameList=["sonya.md","test.md"]
                 for (let name of nameList) {
                     this.tempList.push({
                         name:name,

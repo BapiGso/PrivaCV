@@ -24,7 +24,7 @@ jobs:
       - name: Build WASM
         run: |
           mkdir -p assets/js
-          tinygo build -o assets/js/md2html.wasm -target wasm ./cmd/wasm.go
+          tinygo build -o assets/js/md2html.wasm -target wasm ./cmd/wasm/wasm.go
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
