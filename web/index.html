@@ -99,7 +99,6 @@
                 }
             }
             &>main{
-                margin:20px 0 20px 0;
                 display: flex;
                 justify-content: space-around;
                 &>#editor{
@@ -112,7 +111,7 @@
                     z-index: 9;
                     border: none;
                     overflow: hidden;
-                    zoom: 0.7;
+                    zoom: 0.5;
                 }
             }
         }
@@ -140,13 +139,11 @@
     <ul id="TemplateList">
         <template  x-for="val in tempList" x-init="await loadTempList()">
             <li>
-                <iframe :srcdoc="marked.parse(val.content)" x-init="console.log('cv内容为',val.content)"></iframe>
+                <iframe :srcdoc="marked.parse(val.content)" scrolling="no"></iframe>
                 <a x-text="`use ${val.name}`" href @click.prevent="edit(val)"></a>
             </li>
         </template>
     </ul>
-
-
 </section>
 
 <nav>
@@ -172,7 +169,7 @@
 
 
 <main>
-    <div id="editor" style="width: 700px"></div>
+    <div id="editor" style="width: 700px;height: 16cm"></div>
     <iframe id="CVPrinter" :srcdoc="marked.parse(CV.content)" scrolling="no"></iframe>
 </main>
 
@@ -202,10 +199,10 @@
                     editor.onDidChangeModelContent((event) => {
                         console.log("编辑器内容变更为",editor.getValue());
                         this.CV.content = editor.getValue();
-                        const height = editor.getModel().getLineCount() * 19.5;
+                        // const height = editor.getModel().getLineCount() * 19.5;
                         // const visibleRanges = editor.getVisibleRanges()[0].;
-                        document.getElementById('editor').style.height = `${height}px`;
-                        editor.layout();
+                        // document.getElementById('editor').style.height = `${height}px`;
+                        // editor.layout();
                     });
 
                 });

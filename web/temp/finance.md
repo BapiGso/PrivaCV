@@ -12,12 +12,12 @@
         background-color: white;
     }
     h1,h2,ul{
-        margin-block-start: 0.3em;
-        margin-block-end: 0.3em;
+        margin-block-start: 0.5em;
+        margin-block-end: 0.5em;
     }
     p{
-        margin-block-start: 0.2em;
-        margin-block-end: 0.2em;
+        margin-block-start: 0.3em;
+        margin-block-end: 0.3em;
     }
     table{
         width: 100%;
@@ -41,7 +41,7 @@ Xxxx City, xxxxx Province| xxx
 |:------------------------------------------| --------------------: |
 | *Bachelor of  Arts ; Major in Accounting* | Sept 2019 – June 2023 |
 
-
+*   **GPA:**   3.5/ 4.0
 
 *   **Honors/Awards:**   The school's third-class scholarship, outstanding award
 
