@@ -9,7 +9,7 @@
 
 ## Demo
 
-[Demo](https://bapigso.github.io/PrivaCV/web)
+[Demo](https://bapigso.github.io/PrivaCV)
 
 # Author
 [SMOE](https://smoe.cc/)

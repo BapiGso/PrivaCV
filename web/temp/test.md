@@ -1,20 +1,19 @@
 <style>
-    body {
+    html{
         width: 210mm;
         height: 297mm;
-        margin: 0 auto;
-        padding: 20mm;
+        padding: 10mm;
+    }
+    body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
         background-color: white;
     }
-    @page {
-        size: A4;
-    }
+
     @media print {
-        html, body {
-            width: 210mm;
-            height: 297mm;
-            margin: 0;
-            padding: 0;
+        @page {
+            size: A4;
         }
     }
 </style>
