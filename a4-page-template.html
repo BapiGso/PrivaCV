@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A4 页面模板 - 简化版</title>
+    <script>
+        window.print()
+    </script>
+    <style>
+        @page {
+            size: A4;
+        }
+        body {
+            width: 210mm;
+            height: 297mm;
+            margin: 0 auto;
+            padding: 20mm;
+            background-color: white;
+        }
+        @media screen {
+            body {
+                border: 1px #D3D3D3 solid;
+                box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            }
+        }
+        @media print {
+            html, body {
+                width: 210mm;
+                height: 297mm;
+                margin: 0;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>A4 页面内容</h1>
+    <p>这里是您的页面内容。整个 body 元素现在就是 A4 大小。</p>
+</body>
+</html>
