@@ -7,6 +7,10 @@
 - **有点不简单易用**：通过 [Markdown](https://www.markdownguide.org/basic-syntax/) 语法撰写内容，使用 [CSS](https://developer.mozilla.org/zh-CN/docs/Web/CSS) 进行美化。
 - **好在有模板支持**：提供多种默认模板，您可以根据个人需求进行简单修改，轻松创建美观的简历。
 
+## Demo
+
+[Demo](https://bapigso.github.io/PrivaCV/web)
+
 # Author
 [SMOE](https://smoe.cc/)
 
