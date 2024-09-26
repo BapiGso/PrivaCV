@@ -27,7 +27,7 @@
             /* Original: 0.25rem */
             --pico-modal-overlay-backdrop-filter: none;
             /* Original: 0.375rem */
-            --pico-modal-overlay-background-color: transparent;
+            /*--pico-modal-overlay-background-color: transparent;*/
             /* Original: rgba(232, 234, 237, 0.75) */
             --pico-nav-element-spacing-vertical:0.7em;
             /* Original: 1em */
@@ -159,11 +159,10 @@
         </li>
     </ul>
     <ul>
-        
-        <li><a>DataURL</a></li>
-        <li><a>IconList</a></li>
+
         <li><a href @click.prevent="exportPDF">ExportPDF</a></li>
         <li><a href="https://github.com/BapiGso/PrivaCV" target="_blank">Github</a></li>
+        <li><a href @click.prevent="AboutPage=true">About</a></li>
     </ul>
 </nav>
 
@@ -173,6 +172,34 @@
     <iframe id="CVPrinter" :srcdoc="marked.parse(CV.content)" scrolling="no"></iframe>
 </main>
 
+<dialog :open="AboutPage">
+    <article>
+        <header>
+            <button rel="prev" @click="AboutPage=false"></button>
+            <p><strong>Tips</strong></p>
+        </header>
+        <h5>Star法则</h5>
+        <p><a href="https://zh.wikipedia.org/wiki/STAR%E5%8E%9F%E5%88%99" target="_blank">一种行为面试方法</a></p>
+        <h5>Icon图标</h5>
+        <p>需要插入图标可以在<a href="https://feathericons.com/" target="_blank">feathericons</a>或者其他提供icon的网站下载svg直接粘贴</p>
+        <h5>Avatar头像</h5>
+        <p>
+            上传您的图片，然后使用<a href="https://developer.mozilla.org/zh-CN/docs/Web/CSS/position" target="_blank">CSS的position</a>来修改图片的位置
+            <input type="file" @change="handleFileChange($event)">
+        </p>
+        <h5>Data URL</h5>
+        <p><a href="https://developer.mozilla.org/zh-TW/docs/Web/URI/Schemes/data" target="_blank">Data URL</a>允許內容創作者將小型檔案嵌入文件中。将您的作品转换DataURL嵌入到link中有意向不到的效果哦（适用于网络环境差或者网络条件不允许的情况下）</p>
+        <h5>Font字体</h5>
+        <p>中英文混合的简历建议使用无衬线字体:<a href="https://developer.apple.com/fonts/" target="_blank">San Francisco</a>,<a href="https://github.com/adobe-fonts/source-han-sans" target="_blank">Source Han Sans</a>，
+            英文简历就随个人喜好了，作者比较喜欢Serif
+        </p>
+        <h5>最后</h5>
+        <p>
+            作者不是产品经理，所以这个工具仅考虑到用md & CSS的用户，门槛还是有点的，
+            有什么能让这个工具更好用的想法欢迎您提<a href="https://github.com/BapiGso/PrivaCV/issues" target="_blank">Issue</a>
+        </p>
+    </article>
+</dialog>
 
 <script>
     document.addEventListener('alpine:init',
@@ -212,12 +239,13 @@
                 });
 
             },
+            AboutPage:false,
             EditPage:false,
             CV:{name:'', content:'',},
             tempList: [],
             resumeList:JSON.parse(localStorage.getItem("resumeList"))||[],
             async loadTempList(){
-                const nameList=["finance.md","sonya.md","test.md"]
+                const nameList=["finance.md","sonya.md","frontend.md"]
                 for (let name of nameList) {
                     this.tempList.push({
                         name:name,
@@ -260,6 +288,20 @@
             },
             del(index){
                 this.resumeList.splice(index, 1);
+            },
+            async handleFileChange(event){
+                const file = event.target.files[0];
+                if (!file) return
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const dataUrl = e.target.result;
+                    const imgElement = `<img src="${dataUrl}" alt="Copied Image">`;
+                    try {// 使用 Clipboard API 复制文本
+                        await navigator.clipboard.writeText(imgElement);
+                        alert('图片已复制到您的剪切板，请粘贴使用');
+                    } catch (err) {alert( err);}
+                };
+                reader.readAsDataURL(file);
             }
         }))
     })
