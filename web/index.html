@@ -125,7 +125,7 @@
     <ul id="ResumeList">
         <template x-for="(val, index) in resumeList">
             <li>
-                <iframe :srcdoc="marked.parse(val.content)" scrolling="no"></iframe>
+                <iframe :srcdoc="marked.parse(removeFrontmatter(val.content))" scrolling="no"></iframe>
                 <article>
                     <p><b x-text="val.name"></b></p>
                     <small x-text="val.modified"></small>
@@ -140,7 +140,7 @@
     <ul id="TemplateList">
         <template  x-for="val in tempList" x-init="await loadTempList()">
             <li>
-                <iframe :srcdoc="marked.parse(val.content)" scrolling="no"></iframe>
+                <iframe :srcdoc="marked.parse(removeFrontmatter(val.content))" scrolling="no"></iframe>
                 <a x-text="`use ${val.name}`" href @click.prevent="edit(val)"></a>
             </li>
         </template>
