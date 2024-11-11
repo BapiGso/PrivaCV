@@ -170,7 +170,7 @@
 
 <main>
     <div id="editor" style="width: 700px;height: 16cm"></div>
-    <iframe id="CVPrinter" :srcdoc="marked.parse(CV.content)" scrolling="no"></iframe>
+    <iframe id="CVPrinter" :srcdoc="marked.parse(removeFrontmatter(CV.content))" scrolling="no"></iframe>
 </main>
 
 <dialog :open="AboutPage">
@@ -305,6 +305,13 @@
                     } catch (err) {alert( err);}
                 };
                 reader.readAsDataURL(file);
+            },
+            removeFrontmatter(markdown) {
+                // 正则表达式匹配 YAML frontmatter
+                const frontmatterRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---[\r\n]+/m;
+
+                // 去掉 frontmatter
+                return markdown.replace(frontmatterRegex, '');
             }
         }))
     })
