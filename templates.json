@@ -1,0 +1,149 @@
+{
+  "version": 3,
+  "note": "模板索引。新增模板只需要在这里加一条，不用改 index.html。内容文件放 content/，排版写在文件开头的 <style> 块里。",
+  "templates": [
+    {
+      "id": "backend-engineer",
+      "name": "后端工程师",
+      "desc": "社招技术岗，量化结果为主，一页密排。",
+      "content": "content/backend-engineer.md",
+      "tags": [
+        "中文",
+        "技术",
+        "社招"
+      ]
+    },
+    {
+      "id": "frontend-engineer",
+      "name": "前端工程师",
+      "desc": "技能表格 + 项目经历，配 Typst 风的留白排版。",
+      "content": "content/frontend-engineer.md",
+      "tags": [
+        "中文",
+        "技术",
+        "社招"
+      ]
+    },
+    {
+      "id": "data-analyst",
+      "name": "数据分析师",
+      "desc": "偏分析与实验方法论，指标口径写得清楚。",
+      "content": "content/data-analyst.md",
+      "tags": [
+        "中文",
+        "数据",
+        "社招"
+      ]
+    },
+    {
+      "id": "product-manager",
+      "name": "产品经理",
+      "desc": "开头带一句自我定位，经历按业务结果组织。",
+      "content": "content/product-manager.md",
+      "tags": [
+        "中文",
+        "产品",
+        "社招"
+      ]
+    },
+    {
+      "id": "tech-lead",
+      "name": "技术负责人 / 总监",
+      "desc": "带团队和拿结果并重，时间线走左侧列，一眼看得出履历节奏。",
+      "content": "content/tech-lead.md",
+      "tags": [
+        "中文",
+        "管理",
+        "社招"
+      ]
+    },
+    {
+      "id": "finance",
+      "name": "财务 / 投资分析",
+      "desc": "教育背景前置、证书突出，配偏书面的衬线排版。",
+      "content": "content/finance.md",
+      "tags": [
+        "中文",
+        "金融",
+        "社招"
+      ]
+    },
+    {
+      "id": "consultant",
+      "name": "咨询 / 战略",
+      "desc": "案例按「问题 - 做法 - 影响」写，排版走最正式的 LaTeX article。",
+      "content": "content/consultant.md",
+      "tags": [
+        "中文",
+        "咨询",
+        "社招"
+      ]
+    },
+    {
+      "id": "new-grad",
+      "name": "应届生 / 实习",
+      "desc": "教育 + 实习 + 项目 + 获奖的校招结构，默认用最保守的 ATS 排版。",
+      "content": "content/new-grad.md",
+      "tags": [
+        "中文",
+        "校招",
+        "ATS 友好"
+      ]
+    },
+    {
+      "id": "campus-two-column",
+      "name": "校招 · 双栏一页",
+      "desc": "课程、技能、竞赛、项目全塞进一页的双栏版，演示 .cv-grid 写法。走内推时用。",
+      "content": "content/campus-two-column.md",
+      "tags": [
+        "中文",
+        "校招",
+        "双栏"
+      ]
+    },
+    {
+      "id": "academic-cv",
+      "name": "Academic CV",
+      "desc": "申博 / 教职 / 博后。含论文、教学、服务、Talk，天然多页。",
+      "content": "content/academic-cv.md",
+      "tags": [
+        "英文",
+        "学术",
+        "多页"
+      ]
+    },
+    {
+      "id": "english-swe",
+      "name": "English · Sidebar",
+      "desc": "英文双栏，演示 .cv-grid 侧边栏写法。海投英文岗或做人工渠道版本。",
+      "content": "content/english-swe.md",
+      "tags": [
+        "英文",
+        "双栏",
+        "技术"
+      ]
+    },
+    {
+      "id": "frontend-classic",
+      "name": "Frontend Engineer（2023 旧版）",
+      "desc": "两年前那份英文前端简历。青色标题、技能两列排、时间用斜体浮到行右侧。",
+      "content": "content/frontend-classic.md",
+      "tags": [
+        "英文",
+        "技术",
+        "旧版"
+      ]
+    },
+    {
+      "id": "developer-classic",
+      "name": "Developer（2023 旧版）",
+      "desc": "两年前那份 LaTeX 风英文简历。Garamond 居中大标题、章节下通栏横线、时间靠表格右对齐。",
+      "content": "content/developer-classic.md",
+      "tags": [
+        "英文",
+        "技术",
+        "旧版"
+      ]
+    }
+  ]
+}
