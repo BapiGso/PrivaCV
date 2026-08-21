@@ -12,10 +12,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./web
+          # web/ 里除了静态资源还有个 assets.go（只给 go:embed 用），不用发到站点上
+          exclude_assets: 'assets.go'

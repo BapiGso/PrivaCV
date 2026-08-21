@@ -59,7 +59,7 @@
         font-size: 11px;
         color: #555;
         text-align: center;
-        line-height: 0.2rem;
+        line-height: 1.5;
         margin-bottom: 2rem;
     }
     

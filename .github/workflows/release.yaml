@@ -12,26 +12,27 @@ jobs:
     permissions:
       contents: write  # 这给予了 workflow 写入仓库内容的权限
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.22.1
+          go-version: '1.22'
 
       - name: Build
         run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o PrivaCV_linux_amd64 cmd/server/main.go
-          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o PrivaCV_linux_arm64 cmd/server/main.go
-          CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -o PrivaCV_linux_arm cmd/server/main.go
-          CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -o PrivaCV_linux_riscv64 cmd/server/main.go
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o PrivaCV_windows_amd64.exe cmd/server/main.go
-          CGO_ENABLED=0 GOOS=windows GOARCH=arm64 go build -o PrivaCV_windows_arm64.exe cmd/server/main.go
-          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o PrivaCV_mac_amd64 cmd/server/main.go
-          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o PrivaCV_mac_arm64 cmd/server/main.go
+          # -s -w 去掉符号表与调试信息，二进制约 9.1MB -> 6.6MB
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o PrivaCV_linux_amd64 cmd/server/main.go
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o PrivaCV_linux_arm64 cmd/server/main.go
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -ldflags="-s -w" -o PrivaCV_linux_arm cmd/server/main.go
+          CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -ldflags="-s -w" -o PrivaCV_linux_riscv64 cmd/server/main.go
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o PrivaCV_windows_amd64.exe cmd/server/main.go
+          CGO_ENABLED=0 GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" -o PrivaCV_windows_arm64.exe cmd/server/main.go
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o PrivaCV_mac_amd64 cmd/server/main.go
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o PrivaCV_mac_arm64 cmd/server/main.go
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub 自动提供的 token
         with: # 将下述可执行文件 release 上去

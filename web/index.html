@@ -1,311 +1,1727 @@
 <!DOCTYPE html>
 <html lang="zh-Hans">
 <head>
-    <title>PrivaCV</title>
     <meta charset="UTF-8">
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.51.0/min/vs/loader.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PrivaCV — 本地简历生成器</title>
+    <meta name="description" content="基于 Markdown 与 CSS 的简历生成器，全部内容在浏览器本地处理，不上传任何服务器。">
     <link rel="icon" href="favicon.jpg" type="image/jpeg">
+
+    <!-- 全部依赖本地自托管：断网 / 内网 / 单机二进制都能完整运行 -->
+    <link rel="stylesheet" href="vendor/pico.min.css">
+    <link rel="stylesheet" href="vendor/codemirror/codemirror.css">
+    <script src="vendor/marked.min.js"></script>
+    <script src="vendor/codemirror/codemirror.js"></script>
+    <script src="vendor/codemirror/addon-overlay.js"></script>
+    <script src="vendor/codemirror/addon-closebrackets.js"></script>
+    <script src="vendor/codemirror/addon-matchbrackets.js"></script>
+    <script src="vendor/codemirror/addon-active-line.js"></script>
+    <script src="vendor/codemirror/addon-placeholder.js"></script>
+    <script src="vendor/codemirror/mode-xml.js"></script>
+    <script src="vendor/codemirror/mode-javascript.js"></script>
+    <script src="vendor/codemirror/mode-css.js"></script>
+    <script src="vendor/codemirror/mode-htmlmixed.js"></script>
+    <script src="vendor/codemirror/mode-markdown.js"></script>
+    <script src="vendor/codemirror/mode-gfm.js"></script>
+
     <style>
-        [data-theme=light],
-        :root:not([data-theme=dark]) {
-            --pico-accordion-active-summary-color: #0009;
-            --pico-text-selection-color: #E7B6EE33;
-            --pico-primary: #943DA5;
-            /*noinspection CssUnresolvedCustomProperty*/
-            --pico-font-family-sans-serif: Inter, system-ui, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, Helvetica, Arial, "Helvetica Neue", sans-serif, var(--pico-font-family-emoji);
-            --pico-font-size: 100%;
-            /* Original: 100% */
-            --pico-line-height: 1.25;
-            /* Original: 1.5 */
-            --pico-form-element-spacing-vertical: 0.5rem;
-            /* Original: 1rem */
-            --pico-form-element-spacing-horizontal: 1.0rem;
-            /* Original: 1.25rem */
-            --pico-border-radius: 0.375rem;
-            /* Original: 0.25rem */
-            --pico-modal-overlay-backdrop-filter: none;
-            /* Original: 0.375rem */
-            /*--pico-modal-overlay-background-color: transparent;*/
-            /* Original: rgba(232, 234, 237, 0.75) */
-            --pico-nav-element-spacing-vertical:0.7em;
-            /* Original: 1em */
-            /*--pico-typography-spacing-vertical: 0.8rem;*/
-            /* Original: 1em */
+        /* ======================= 主题变量 ======================= */
+        /* 注意：Pico v2 把 --pico-primary 定义在 :root:not([data-theme=dark]) 下，
+           特异性比 :root 高，所以覆盖它必须用同样的选择器。
+           组件自己的颜色统一走 --accent，不跟 Pico 抢。 */
+        :root {
+            --accent: #943da5;
+            --accent-soft: rgba(148, 61, 165, 0.1);
+            --app-fg: #2c2733;
+            --nav-h: 3.25rem;
+            --app-bg: #f6f4f7;
+            --app-panel: #ffffff;
+            --app-border: #e3dfe6;
+            --app-nav: #f4e9f4;
+            --app-muted: #6b6472;
+            --app-canvas: #e9e6ec;
+            --cm-bg: #fff;
+            --cm-fg: #1f1b24;
+            --cm-gutter: #faf8fb;
+            --cm-gutter-fg: #b3aab9;
+            --cm-active: #f7f2f8;
+            --cm-cursor: #943da5;
+            --cm-sel: #e7d3ec;
+            --tok-head: #943da5;
+            --tok-strong: #1f1b24;
+            --tok-link: #1c6fa8;
+            --tok-quote: #5c7a5c;
+            --tok-key: #a3216d;
+            --tok-str: #2c7a4b;
+            --tok-num: #b45309;
+            --tok-comment: #8a8394;
+            --tok-tag: #1c6fa8;
         }
 
-        body{
-            &>section{
-                width: 100%;
-                height: 100%;
-                overflow-y: scroll;
-                position: fixed;
-                transition: transform 0.5s ease-in-out;
-                backdrop-filter: blur(10px); /* 设置背景模糊效果 */
-                background-color: rgba(255, 255, 255, 0.5); /* 可选：设置背景颜色和透明度 */
-                z-index: 100;
-                padding: 50px 20px 50px 20px;
-                &>#ResumeList {
-                    display: flex;
-                    flex-wrap: wrap;
-                    & > li {
-                        display: flex;
-                        width: 22vw;
-                        & > iframe {
-                            width: 254mm;
-                            height: 340mm;
-                            zoom: 0.15;
-                            background-color: white;
-                            /*noinspection CssUnresolvedCustomProperty*/
-                            box-shadow: var(--pico-card-box-shadow);
-                        }
-                        & > article {
-                            margin: 0 0 0 20px;
-                            box-shadow: none;
-                            background-color: transparent;
-                        }
-                    }
-                }
-                &>#TemplateList {
-                    display: flex;
-                    flex-wrap: wrap;
-                    &>li {
-                        width: 150px;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        background-color: white;
-                        margin: 0 20px 0 20px;
-                        & > iframe {
-                            width: 230mm;
-                            height: 325mm;
-                            zoom: 0.15;
-                            /*noinspection CssUnresolvedCustomProperty*/
-                            box-shadow: var(--pico-card-box-shadow);
-                        }
-                    }
-                }
-            }
-            &>nav{
-                position: sticky;
-                top: 0;
-                background-color: #f4e9f4;
-                box-shadow: 0 0 10px gainsboro;
-                z-index: 10;
-                padding: 0 20px 0 20px;
-                & fieldset{
-                    margin-bottom: 0!important;
-                }
-            }
-            &>main{
-                display: flex;
-                justify-content: space-around;
-                &>#editor{
+        [data-theme="light"],
+        :root:not([data-theme="dark"]) {
+            --pico-primary: #943da5;
+            --pico-primary-background: #943da5;
+            --pico-primary-hover-background: #7f3390;
+            --pico-primary-focus: rgba(148, 61, 165, 0.4);
+            --pico-text-selection-color: rgba(231, 182, 238, 0.3);
+            --pico-font-size: 100%;
+            --pico-line-height: 1.5;
+            --pico-border-radius: 0.375rem;
+            --pico-form-element-spacing-vertical: 0.45rem;
+            --pico-form-element-spacing-horizontal: 0.7rem;
+        }
 
-                }
-                &>iframe{
-                    width: 23.0cm;
-                    height: 32.5cm;
-                    box-shadow: 0 0 10px gray;
-                    z-index: 9;
-                    border: none;
-                    overflow: hidden;
-                    zoom: 0.5;
-                }
+        [data-theme="dark"] {
+            --pico-primary: #d99ae8;
+            --pico-primary-background: #8a389a;
+            --pico-primary-hover-background: #9c47ad;
+            --pico-primary-focus: rgba(217, 154, 232, 0.35);
+            --pico-font-size: 100%;
+            --pico-line-height: 1.5;
+            --pico-border-radius: 0.375rem;
+            --pico-form-element-spacing-vertical: 0.45rem;
+            --pico-form-element-spacing-horizontal: 0.7rem;
+            --accent: #d99ae8;
+            --accent-soft: rgba(217, 154, 232, 0.14);
+            --app-fg: #e6e0eb;
+            --app-bg: #17141a;
+            --app-panel: #1e1a22;
+            --app-border: #322c39;
+            --app-nav: #221d28;
+            --app-muted: #9c93a6;
+            --app-canvas: #100e13;
+            --cm-bg: #1e1a22;
+            --cm-fg: #e6e0eb;
+            --cm-gutter: #1a171e;
+            --cm-gutter-fg: #5d5566;
+            --cm-active: #262030;
+            --cm-cursor: #d99ae8;
+            --cm-sel: #45355080;
+            --tok-head: #d99ae8;
+            --tok-strong: #f2ecf5;
+            --tok-link: #7cc2f0;
+            --tok-quote: #9ec59e;
+            --tok-key: #f08bbd;
+            --tok-str: #86d9a6;
+            --tok-num: #f0b45e;
+            --tok-comment: #6f6779;
+            --tok-tag: #7cc2f0;
+        }
+
+        [x-cloak] { display: none !important; }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        body {
+            background: var(--app-bg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ======================= 顶栏 ======================= */
+        .topbar {
+            flex: 0 0 auto;
+            height: var(--nav-h);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0 0.75rem;
+            background: var(--app-nav);
+            border-bottom: 1px solid var(--app-border);
+            z-index: 30;
+        }
+
+        .topbar .spacer { flex: 1 1 auto; }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--accent);
+            background: none;
+            border: none;
+            padding: 0.3rem 0.4rem;
+            margin: 0;
+            width: auto;
+            cursor: pointer;
+        }
+
+        .brand:hover { background: var(--accent-soft); }
+
+        .tbtn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--app-fg);
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 0.35rem 0.6rem;
+            margin: 0;
+            width: auto;
+            border-radius: var(--pico-border-radius);
+            cursor: pointer;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+
+        .tbtn:hover:not(:disabled) { background: rgba(128, 128, 128, 0.14); }
+        .tbtn:disabled { opacity: 0.42; cursor: not-allowed; }
+        .tbtn.primary { background: var(--accent); color: #fff; }
+        .tbtn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+        .tbtn svg { width: 15px; height: 15px; flex: 0 0 auto; }
+
+        .name-field {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .name-field input {
+            width: 13rem;
+            height: 2rem;
+            margin: 0;
+            font-size: 0.85rem;
+            padding: 0 0.55rem;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #e0a53a;
+            flex: 0 0 auto;
+        }
+
+        /* ======================= 简历库 ======================= */
+        .library {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding: 1.75rem 1.5rem 4rem;
+        }
+
+        .library > .inner { max-width: 1180px; margin: 0 auto; }
+
+        .sec-head {
+            display: flex;
+            align-items: baseline;
+            gap: 0.75rem;
+            margin: 2rem 0 0.35rem;
+        }
+
+        .sec-head:first-child { margin-top: 0; }
+        .sec-head h2 { font-size: 1.15rem; margin: 0; }
+        .sec-head p { font-size: 0.82rem; color: var(--app-muted); margin: 0; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(206px, 1fr));
+            gap: 1.15rem;
+            margin-top: 1rem;
+        }
+
+        .card {
+            background: var(--app-panel);
+            border: 1px solid var(--app-border);
+            border-radius: 0.6rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow 0.15s, transform 0.15s;
+        }
+
+        .card:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .thumb {
+            position: relative;
+            height: 200px;
+            background: #fff;
+            border-bottom: 1px solid var(--app-border);
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .thumb iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 210mm;
+            height: 297mm;
+            border: 0;
+            /* 210mm × 0.26 ≈ 206px，正好是卡片最小宽度；卡片更宽时右侧留白也是白纸色，看不出来 */
+            transform: scale(0.26);
+            transform-origin: top left;
+            pointer-events: none;
+            background: #fff;
+        }
+
+        .thumb .ph {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            color: #c9c2cf;
+            font-size: 0.78rem;
+        }
+
+        .card-body { padding: 0.7rem 0.8rem 0.8rem; }
+        .card-body h3 { font-size: 0.94rem; margin: 0 0 0.2rem; }
+        .card-body .meta { font-size: 0.75rem; color: var(--app-muted); margin: 0 0 0.5rem; line-height: 1.45; }
+
+        .tags { display: flex; flex-wrap: wrap; gap: 0.28rem; margin: 0 0 0.55rem; }
+
+        .tag {
+            font-size: 0.66rem;
+            padding: 0.08rem 0.36rem;
+            border-radius: 0.7rem;
+            background: var(--accent-soft);
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        .card-actions { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+
+        .lbtn {
+            font-size: 0.76rem;
+            padding: 0.22rem 0.5rem;
+            border: 1px solid var(--app-border);
+            background: transparent;
+            color: var(--app-fg);
+            border-radius: 0.3rem;
+            cursor: pointer;
+            width: auto;
+            margin: 0;
+        }
+
+        .lbtn:hover { background: rgba(128, 128, 128, 0.12); }
+        .lbtn.danger:hover { background: #e5484d; color: #fff; border-color: #e5484d; }
+        .lbtn.solid { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        .empty {
+            border: 1.5px dashed var(--app-border);
+            border-radius: 0.6rem;
+            padding: 2.25rem 1.5rem;
+            text-align: center;
+            color: var(--app-muted);
+            margin-top: 1rem;
+        }
+
+        .empty p { margin: 0 0 0.85rem; font-size: 0.9rem; }
+
+        /* ======================= 编辑器 ======================= */
+        .workspace {
+            flex: 1 1 auto;
+            display: grid;
+            grid-template-columns: var(--split-left, 45fr) 7px var(--split-right, 55fr);
+            min-height: 0;
+        }
+
+        .pane {
+            min-width: 0;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            background: var(--app-panel);
+        }
+
+        .pane-head {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.3rem 0.5rem;
+            border-bottom: 1px solid var(--app-border);
+            background: var(--app-panel);
+            min-height: 2.35rem;
+        }
+
+        .pane-head .spacer { flex: 1 1 auto; }
+
+        /* Pico 的 [role=group] 会把容器撑成 100% 宽，这里不能用那个 role */
+        .seg {
+            display: inline-flex;
+            flex: 0 0 auto;
+            background: rgba(128, 128, 128, 0.12);
+            border-radius: 0.35rem;
+            padding: 2px;
+        }
+
+        .seg button {
+            font-size: 0.78rem;
+            padding: 0.2rem 0.7rem;
+            border: none;
+            background: transparent;
+            color: var(--app-muted);
+            border-radius: 0.28rem;
+            cursor: pointer;
+            width: auto;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .seg button[aria-pressed="true"] {
+            background: var(--app-panel);
+            color: var(--accent);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+        }
+
+        .pane-head select {
+            width: auto;
+            height: 1.85rem;
+            margin: 0;
+            font-size: 0.78rem;
+            padding: 0 1.6rem 0 0.5rem;
+            background-position: center right 0.4rem;
+            background-size: 0.55rem auto;
+        }
+
+        .hint {
+            font-size: 0.73rem;
+            color: var(--app-muted);
+            white-space: nowrap;
+        }
+
+        .editor-host { flex: 1 1 auto; min-height: 0; position: relative; }
+
+        .editor-host > div { position: absolute; inset: 0; }
+
+        /* 拖拽分隔条 */
+        .splitter {
+            background: var(--app-border);
+            cursor: col-resize;
+            position: relative;
+            transition: background 0.12s;
+        }
+
+        .splitter::after {
+            content: "";
+            position: absolute;
+            inset: 0 -4px;
+        }
+
+        .splitter:hover, .splitter.dragging { background: var(--accent); }
+        body.resizing { cursor: col-resize; user-select: none; }
+        body.resizing iframe { pointer-events: none; }
+
+        /* 预览 */
+        .preview-scroll {
+            flex: 1 1 auto;
+            overflow: auto;
+            background: var(--app-canvas);
+            padding: 1.25rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .paper-outer { position: relative; flex: 0 0 auto; }
+
+        .paper-inner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: top left;
+        }
+
+        #preview {
+            display: block;
+            width: 210mm;
+            border: 0;
+            background: #fff;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.22);
+        }
+
+        .pagebreak {
+            position: absolute;
+            left: 0;
+            width: 210mm;
+            height: 0;
+            border-top: 1px dashed #e5484d;
+            pointer-events: none;
+        }
+
+        .pagebreak span {
+            position: absolute;
+            right: 2mm;
+            top: 1.5mm;
+            font-size: 3.2mm;
+            color: #e5484d;
+            font-family: system-ui, sans-serif;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 0 1mm;
+        }
+
+        /* ======================= CodeMirror 主题 ======================= */
+        .CodeMirror {
+            height: 100%;
+            font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.65;
+            background: var(--cm-bg);
+            color: var(--cm-fg);
+        }
+
+        .cm-s-privacv .CodeMirror-gutters { background: var(--cm-gutter); border-right: 1px solid var(--app-border); }
+        .cm-s-privacv .CodeMirror-linenumber { color: var(--cm-gutter-fg); }
+        .cm-s-privacv .CodeMirror-cursor { border-left: 2px solid var(--cm-cursor); }
+        .cm-s-privacv .CodeMirror-activeline-background { background: var(--cm-active); }
+        .cm-s-privacv .CodeMirror-selected { background: var(--cm-sel); }
+        .cm-s-privacv .CodeMirror-focused .CodeMirror-selected { background: var(--cm-sel); }
+        .cm-s-privacv .CodeMirror-matchingbracket { color: var(--accent) !important; font-weight: 700; }
+        .cm-s-privacv .cm-header { color: var(--tok-head); font-weight: 700; }
+        .cm-s-privacv .cm-header-1 { font-size: 1.28em; }
+        .cm-s-privacv .cm-header-2 { font-size: 1.14em; }
+        .cm-s-privacv .cm-strong { color: var(--tok-strong); font-weight: 700; }
+        .cm-s-privacv .cm-em { font-style: italic; }
+        .cm-s-privacv .cm-link { color: var(--tok-link); }
+        .cm-s-privacv .cm-url { color: var(--tok-comment); }
+        .cm-s-privacv .cm-quote { color: var(--tok-quote); font-style: italic; }
+        .cm-s-privacv .cm-comment { color: var(--tok-comment); font-style: italic; }
+        .cm-s-privacv .cm-keyword, .cm-s-privacv .cm-atom { color: var(--tok-key); }
+        .cm-s-privacv .cm-string, .cm-s-privacv .cm-string-2 { color: var(--tok-str); }
+        .cm-s-privacv .cm-number { color: var(--tok-num); }
+        .cm-s-privacv .cm-property, .cm-s-privacv .cm-attribute { color: var(--tok-link); }
+        .cm-s-privacv .cm-variable-2, .cm-s-privacv .cm-variable-3 { color: var(--tok-key); }
+        .cm-s-privacv .cm-tag { color: var(--tok-tag); }
+        .cm-s-privacv .cm-builtin, .cm-s-privacv .cm-qualifier { color: var(--tok-head); }
+        .cm-s-privacv .cm-def { color: var(--tok-strong); }
+        .cm-s-privacv .CodeMirror-placeholder { color: var(--cm-gutter-fg) !important; }
+
+        /* ======================= Toast ======================= */
+        .toasts {
+            position: fixed;
+            bottom: 1.1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .toast {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            max-width: min(560px, 92vw);
+            padding: 0.6rem 0.9rem;
+            border-radius: 0.45rem;
+            font-size: 0.85rem;
+            line-height: 1.45;
+            color: #fff;
+            background: #2f2836;
+            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28);
+            animation: toast-in 0.18s ease-out;
+        }
+
+        .toast.ok { background: #2c7a4b; }
+        .toast.warn { background: #9a6212; }
+        .toast.error { background: #b02a30; }
+
+        .toast button {
+            width: auto;
+            margin: 0;
+            padding: 0.15rem 0.55rem;
+            font-size: 0.78rem;
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: #fff;
+            border-radius: 0.3rem;
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+
+        .toast button:hover { background: rgba(255, 255, 255, 0.3); }
+
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: none; }
+        }
+
+        /* ======================= 对话框 ======================= */
+        dialog article { max-width: 46rem; }
+        dialog h5 { margin: 1.1rem 0 0.3rem; font-size: 0.95rem; }
+        dialog h5:first-of-type { margin-top: 0; }
+        dialog p { font-size: 0.87rem; margin: 0 0 0.35rem; }
+
+        dialog pre {
+            font-size: 0.78rem;
+            padding: 0.6rem 0.8rem;
+            margin: 0.35rem 0 0.6rem;
+            border-radius: 0.35rem;
+        }
+
+        kbd { font-size: 0.78rem; }
+
+        .kbd-table { font-size: 0.85rem; }
+        .kbd-table td { padding: 0.25rem 0.5rem 0.25rem 0; border: none; }
+
+        /* ======================= 窄屏 ======================= */
+        @media (max-width: 900px) {
+            .workspace {
+                grid-template-columns: 1fr;
+                grid-template-rows: minmax(0, 45vh) 7px minmax(0, 1fr);
             }
+
+            .splitter { cursor: row-resize; }
+            .splitter::after { inset: -4px 0; }
+            .name-field input { width: 8rem; }
+            .tbtn .lbl { display: none; }
+            .preview-scroll { padding: 0.75rem; }
         }
     </style>
 </head>
-<body x-data="PrivaCV" :style="!EditPage && {overflow:'hidden'}">
 
-<section :style="EditPage && {transform: 'translateY(-100%)'}">
-    <h3>ResumeList</h3>
-    <ul id="ResumeList">
-        <template x-for="(val, index) in resumeList">
-            <li>
-                <iframe :srcdoc="marked.parse(val.content)" scrolling="no"></iframe>
-                <article>
-                    <p><b x-text="val.name"></b></p>
-                    <small x-text="val.modified"></small>
-                    <p><a href @click.prevent="edit(val)">编辑</a></p>
-                    <p><a href @click.prevent="copy(val)">复制</a></p>
-                    <p><a href @click.prevent="del(index)">删除</a></p>
+<!-- Alpine v3 只从 document.body 开始初始化，x-data 不能挂在 <html> 上 -->
+<body x-data="privacv" x-cloak>
+
+<!-- ===================== 顶栏 ===================== -->
+<header class="topbar">
+    <button class="brand" @click="goLibrary()" title="返回简历库">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+             stroke-linejoin="round" style="width:18px;height:18px">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+        </svg>
+        PrivaCV
+    </button>
+
+    <template x-if="view === 'editor'">
+        <div class="name-field">
+            <input type="text" x-model="cv.name" aria-label="简历名称" placeholder="未命名简历"
+                   @keydown.enter.prevent="save()">
+            <span class="dot" x-show="dirty" title="有未保存的修改"></span>
+        </div>
+    </template>
+
+    <template x-if="view === 'editor'">
+        <button class="tbtn primary" @click="save()" :disabled="!dirty" title="保存到本地浏览器 (Ctrl/Cmd+S)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                 stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <path d="M17 21v-8H7v8M7 3v5h8"/>
+            </svg>
+            <span class="lbl" x-text="dirty ? '保存' : '已保存'"></span>
+        </button>
+    </template>
+
+    <span class="spacer"></span>
+
+    <template x-if="view === 'editor'">
+        <button class="tbtn" @click="printCV()" title="导出 PDF（浏览器打印，选「另存为 PDF」）">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                 stroke-linejoin="round">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                <path d="M6 14h12v8H6z"/>
+            </svg>
+            <span class="lbl">导出 PDF</span>
+        </button>
+    </template>
+
+    <button class="tbtn" @click="$refs.importInput.click()" title="导入 .md 简历或 .json 备份">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+             stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+        <span class="lbl">导入</span>
+    </button>
+
+    <button class="tbtn" @click="exportCurrent()" title="把当前简历导出为 .md 文件">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+             stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+        <span class="lbl">导出</span>
+    </button>
+
+    <button class="tbtn" @click="toggleTheme()" :title="ui.theme === 'dark' ? '切换到亮色' : '切换到暗色'">
+        <svg x-show="ui.theme === 'light'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <svg x-show="ui.theme === 'dark'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/>
+        </svg>
+    </button>
+
+    <button class="tbtn" @click="dialog = 'help'" title="使用帮助">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+             stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/>
+        </svg>
+        <span class="lbl">帮助</span>
+    </button>
+
+    <a class="tbtn" href="https://github.com/BapiGso/PrivaCV" target="_blank" rel="noopener" title="GitHub">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2 0-.4-.5-1.6.2-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.4 4.7 18.4 5 18.4 5c.7 1.6.2 2.8.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.5.4.9 1.1.9 2.3v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/>
+        </svg>
+    </a>
+
+    <input type="file" x-ref="importInput" accept=".md,.markdown,.json" multiple hidden
+           @change="importFiles($event)">
+</header>
+
+<!-- ===================== 简历库 ===================== -->
+<main class="library" x-show="view === 'library'">
+    <div class="inner">
+
+        <div class="sec-head">
+            <h2>我的简历</h2>
+            <p x-text="`${resumes.length} 份 · 只存在这台设备的浏览器里`"></p>
+            <span style="flex:1"></span>
+            <button class="lbtn solid" @click="createBlank()">＋ 新建空白</button>
+            <button class="lbtn" @click="exportBackup()" :disabled="!resumes.length">备份全部</button>
+        </div>
+
+        <div class="empty" x-show="!resumes.length">
+            <p>还没有简历。从下面挑一个模板开始，或者新建一份空白的。</p>
+            <button class="lbtn solid" @click="createBlank()">新建空白简历</button>
+        </div>
+
+        <div class="grid" x-show="resumes.length">
+            <template x-for="r in sortedResumes" :key="r.id + '@' + libraryEpoch">
+                <article class="card">
+                    <div class="thumb" @click="openResume(r.id)" :title="`编辑「${r.name}」`"
+                         x-init="observeThumb($el, () => renderThumb($el, r.doc))">
+                        <div class="ph">渲染中…</div>
+                    </div>
+                    <div class="card-body">
+                        <h3 x-text="r.name || '未命名简历'"></h3>
+                        <p class="meta">
+                            <span x-text="`修改于 ${fmtDate(r.modified)}`"></span>
+                        </p>
+                        <div class="card-actions">
+                            <button class="lbtn solid" @click="openResume(r.id)">编辑</button>
+                            <button class="lbtn" @click="duplicate(r.id)">复制</button>
+                            <button class="lbtn" @click="exportOne(r)">导出</button>
+                            <button class="lbtn danger" @click="remove(r.id)">删除</button>
+                        </div>
+                    </div>
                 </article>
-            </li>
-        </template>
-    </ul>
-    <h3>TemplateList</h3>
-    <ul id="TemplateList">
-        <template  x-for="val in tempList" x-init="await loadTempList()">
-            <li>
-                <iframe :srcdoc="marked.parse(val.content)" scrolling="no"></iframe>
-                <a x-text="`use ${val.name}`" href @click.prevent="edit(val)"></a>
-            </li>
-        </template>
-    </ul>
-</section>
+            </template>
+        </div>
 
-<nav>
-    <ul>
-        <li @click="EditPage=false"><strong>Home</strong></li>
-        <li>
-            <form  @submit.prevent="saveResume()">
-                <fieldset role="group">
-                    <input x-model="CV.name" aria-label required>
-                    <input type="submit" value="save" >
-                </fieldset>
-            </form>
-        </li>
-    </ul>
-    <ul>
+        <div class="sec-head">
+            <h2>模板</h2>
+            <p x-text="`${catalog.templates.length} 份模板，正文和排版写在同一份 Markdown 里，随便改`"></p>
+        </div>
 
-        <li><a href @click.prevent="exportPDF">ExportPDF</a></li>
-        <li><a href="https://github.com/BapiGso/PrivaCV" target="_blank">Github</a></li>
-        <li><a href @click.prevent="AboutPage=true">About</a></li>
-    </ul>
-</nav>
+        <div class="grid">
+            <template x-for="t in catalog.templates" :key="t.id">
+                <article class="card">
+                    <div class="thumb" @click="useTemplate(t)" :title="`使用「${t.name}」`"
+                         x-init="observeThumb($el, () => renderTemplateThumb($el, t))">
+                        <div class="ph">加载中…</div>
+                    </div>
+                    <div class="card-body">
+                        <h3 x-text="t.name"></h3>
+                        <p class="meta" x-text="t.desc"></p>
+                        <div class="tags">
+                            <template x-for="tag in t.tags" :key="tag">
+                                <span class="tag" x-text="tag"></span>
+                            </template>
+                        </div>
+                        <div class="card-actions">
+                            <button class="lbtn solid" @click="useTemplate(t)">使用这个模板</button>
+                        </div>
+                    </div>
+                </article>
+            </template>
+        </div>
 
-
-<main>
-    <div id="editor" style="width: 700px;height: 16cm"></div>
-    <iframe id="CVPrinter" :srcdoc="marked.parse(CV.content)" scrolling="no"></iframe>
+    </div>
 </main>
 
-<dialog :open="AboutPage">
+<!-- ===================== 编辑器 ===================== -->
+<div class="workspace" x-show="view === 'editor'"
+     :style="`--split-left:${split}fr; --split-right:${100 - split}fr`">
+
+    <!-- 左：编辑 -->
+    <section class="pane">
+        <div class="pane-head">
+            <button class="lbtn" @click="insertEntry()" title="插入一条经历的骨架">插入条目</button>
+            <button class="lbtn" @click="insertPageBreak()" title="在光标处插入强制分页">插入分页</button>
+            <button class="lbtn" @click="$refs.avatarInput.click()">插入图片</button>
+            <input type="file" x-ref="avatarInput" accept="image/*" hidden @change="insertImage($event)">
+            <button class="lbtn" @click="editStyle()" title="在文末追加 <style> 块自定义排版">
+                <span x-text="hasOverride ? '跳到样式块' : '自定义样式'"></span>
+            </button>
+            <span class="spacer"></span>
+            <span class="hint" x-text="`${charCount} 字`"></span>
+        </div>
+        <div class="editor-host">
+            <div x-ref="editorHost"></div>
+        </div>
+    </section>
+
+    <div class="splitter" role="separator" aria-label="调整编辑区宽度" tabindex="0"
+         :class="{ dragging: dragging }"
+         @pointerdown="startDrag($event)"
+         @keydown.arrow-left.prevent="split = clamp(split - 2, 20, 80)"
+         @keydown.arrow-right.prevent="split = clamp(split + 2, 20, 80)"></div>
+
+    <!-- 右：预览 -->
+    <section class="pane">
+        <div class="pane-head">
+            <span class="hint" x-show="!hasOverride">正文里还没有 &lt;style&gt; 块</span>
+            <span class="spacer"></span>
+            <span class="hint" x-text="`${pages} 页`"></span>
+            <div class="seg">
+                <button @click="setZoom('fit')" :aria-pressed="zoom === 'fit'">适应</button>
+                <button @click="setZoom(0.75)" :aria-pressed="zoom === 0.75">75%</button>
+                <button @click="setZoom(1)" :aria-pressed="zoom === 1">100%</button>
+            </div>
+        </div>
+        <div class="preview-scroll" x-ref="previewScroll">
+            <div class="paper-outer"
+                 :style="`width:${210 * MM * scale}px; height:${pages * 297 * MM * scale}px`">
+                <div class="paper-inner" :style="`transform:scale(${scale})`">
+                    <iframe id="preview" x-ref="preview" title="简历预览"
+                            sandbox="allow-same-origin allow-modals"
+                            :style="`height:${pages * 297}mm`"></iframe>
+                    <template x-for="i in Math.max(0, pages - 1)" :key="i">
+                        <div class="pagebreak" :style="`top:${i * 297}mm`">
+                            <span x-text="`第 ${i + 1} 页`"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- ===================== Toast ===================== -->
+<div class="toasts">
+    <template x-for="t in toasts" :key="t.id">
+        <div class="toast" :class="t.type">
+            <span x-text="t.msg"></span>
+            <template x-if="t.action">
+                <button @click="t.action.fn(); dismiss(t.id)" x-text="t.action.label"></button>
+            </template>
+        </div>
+    </template>
+</div>
+
+<!-- ===================== 帮助 ===================== -->
+<dialog :open="dialog === 'help'" @click.self="dialog = null">
     <article>
         <header>
-            <button rel="prev" @click="AboutPage=false"></button>
-            <p><strong>Tips</strong></p>
+            <button rel="prev" aria-label="关闭" @click="dialog = null"></button>
+            <strong>使用帮助</strong>
         </header>
-        <h5>Star 法则</h5>
-        <p><a href="https://zh.wikipedia.org/wiki/STAR%E5%8E%9F%E5%88%99" target="_blank">一种行为面试方法</a></p>
-        <h5>Icon 图标</h5>
-        <p>需要插入图标可以在 <a href="https://feathericons.com/" target="_blank">feathericons</a> 或者其他提供icon的网站下载svg直接粘贴</p>
-        <h5>Avatar 头像</h5>
-        <p>
-            上传您的图片，然后使用 <a href="https://developer.mozilla.org/zh-CN/docs/Web/CSS/position" target="_blank">CSS的position</a> 来修改图片的位置
-            <input type="file" @change="handleFileChange($event)">
-        </p>
-        <h5>Data URL</h5>
-        <p><a href="https://developer.mozilla.org/zh-TW/docs/Web/URI/Schemes/data" target="_blank">Data URL</a> 允许内容创作者将小型档案嵌入文件中，将您的作品转换 DataURL 嵌入到 link 中有意向不到的效果哦（适用于网络环境差或者网络条件不允许的情况下）</p>
-        <h5>Font字体</h5>
-        <p>中英文混合的简历建议使用无衬线字体: <a href="https://developer.apple.com/fonts/" target="_blank">San Francisco</a> ,
-            <a href="https://github.com/adobe-fonts/source-han-sans" target="_blank">Source Han Sans</a> ，英文简历就随个人喜好了，作者比较喜欢 Serif
-        </p>
-        <h5>Punctuation 标点符号</h5>
-        <p><a href="https://github.com/sparanoid/chinese-copywriting-guidelines" target="_blank">中文文案排版指北</a></p>
-        <h5>最后</h5>
-        <p>
-            作者不是产品经理，所以这个工具仅考虑到用 Markdown & CSS 的用户，门槛还是有点的，
-            有什么能让这个工具更好用的想法欢迎您提 <a href="https://github.com/BapiGso/PrivaCV/issues" target="_blank">Issue</a>
-        </p>
+
+        <h5>它是怎么工作的</h5>
+        <p>左边写一份 <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener">Markdown</a>，
+            右边实时预览一张真实的 A4 纸，红色虚线是分页位置。
+            排版就写在同一份文档里的 <code>&lt;style&gt;</code> 块中——一份文件就是一份完整的简历，拷到哪都一样。
+            所有数据只存在这台设备的 <code>localStorage</code> 里，不经过任何服务器。</p>
+
+        <h5>快捷键</h5>
+        <table class="kbd-table">
+            <tbody>
+            <tr><td><kbd>Ctrl</kbd> / <kbd>⌘</kbd> + <kbd>S</kbd></td><td>保存</td></tr>
+            <tr><td><kbd>Ctrl</kbd> / <kbd>⌘</kbd> + <kbd>P</kbd></td><td>导出 PDF</td></tr>
+            <tr><td><kbd>Esc</kbd></td><td>关闭对话框</td></tr>
+            <tr><td>拖动中间分隔条</td><td>调整左右比例（也可以聚焦后用方向键）</td></tr>
+            </tbody>
+        </table>
+
+        <h5>约定：排版靠这几个标签认结构</h5>
+        <p>所有模板都按同一套结构写，照着这个格式写就能直接换模板里的样式块，正文一个字都不用动
+            （工具栏「插入条目」会帮你写好骨架）：</p>
+        <pre><code># 姓名
+一行联系方式
+
+## 章节标题
+
+### 公司 / 学校 &lt;span&gt;2021.06 - 至今&lt;/span&gt;
+#### 职位 / 专业 &lt;span&gt;城市&lt;/span&gt;
+
+- 用 STAR 法则写成果，尽量带数字</code></pre>
+        <p>标题末尾的 <code>&lt;span&gt;</code> 会被推到右边对齐，用来放时间和地点，数字走等宽字形，
+            所以时间线永远是齐的。<code>`行内代码`</code> 会渲染成技能标签，
+            两列表格会渲染成「标签 — 内容」（表头行只是写给编辑器看的，不会印出来）。</p>
+
+        <h5>改样式</h5>
+        <p>模板自带的排版都写在文档开头的 <code>&lt;style&gt;</code> 里，直接改就行。空白简历没有样式块，
+            点工具栏的「自定义样式」会在文末追加一段，里面写规则就能覆盖底座样式，删掉整段就恢复默认。
+            最常用的几个变量已经列在注释里了：</p>
+        <pre><code>&lt;style&gt;
+:root {
+  --fs: 10.2pt;      /* 正文字号，改它一份简历等比缩放 */
+  --lh: 1.5;         /* 行距 */
+  --page-x: 18mm;    /* 左右页边距 */
+  --accent: #111;    /* 强调色 */
+}
+&lt;/style&gt;</code></pre>
+        <p>凑页数优先动 <code>--fs</code> 和 <code>--sp-sec</code>，别去删内容。</p>
+
+        <h5>分页</h5>
+        <p>在需要断开的地方插入 <code>&lt;div class="page-break"&gt;&lt;/div&gt;</code>（工具栏「插入分页」按钮会帮你写），
+            打印时就会从这里翻页。标题、列表项、表格行默认不会被撕成两页。</p>
+
+        <h5>双栏</h5>
+        <p>「校招 · 双栏一页」和「English · Sidebar」两份模板的样式需要内容里有下面这样的容器，注意 <code>&lt;div&gt;</code> 后面要空一行，
+            Markdown 才会继续解析。其余模板遇到这个容器会自动退化成单栏，不会排版错乱：</p>
+        <pre><code>&lt;div class="cv-grid"&gt;
+&lt;div class="sidebar"&gt;
+
+## 联系方式
+- ...
+
+&lt;/div&gt;
+&lt;div class="main"&gt;
+
+## 工作经历
+...
+
+&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+        <h5>ATS：投递前想一下</h5>
+        <p>不少公司会先用简历筛选系统做机器解析，双栏、表格、文本框、图片里的文字都容易被读乱甚至丢掉。
+            投大厂、校招和猎头渠道建议用 <b>应届生 / 实习</b> 或 <b>后端工程师</b> 这类单栏模板；
+            双栏那两份留给人工渠道或者作品集。</p>
+
+        <h5>导出 PDF</h5>
+        <p>点「导出 PDF」会调用浏览器打印。在打印对话框里记得把<b>页眉和页脚关掉</b>、边距选<b>「无」</b>，
+            页面尺寸选 A4，否则会多出网址和页码。缩放保持 100%。</p>
+
+        <h5>头像</h5>
+        <p>点「插入图片」会把图片转成
+            <a href="https://developer.mozilla.org/zh-CN/docs/Web/URI/Schemes/data" target="_blank" rel="noopener">Data URL</a>
+            直接嵌进 Markdown，不会上传。注意浏览器本地存储通常只有 5MB 左右，图片建议先压到 200KB 以内。
+            位置和大小用 CSS 的 <code>img</code> 选择器调。</p>
+
+        <h5>字体</h5>
+        <p>中英混排建议无衬线：<a href="https://github.com/adobe-fonts/source-han-sans" target="_blank" rel="noopener">思源黑体</a>、
+            <a href="https://developer.apple.com/fonts/" target="_blank" rel="noopener">San Francisco</a>；
+            纯英文简历用衬线也很好。字体必须是<b>本机装了的</b>才会生效，导出 PDF 时会被嵌入。</p>
+
+        <h5>写作</h5>
+        <p><a href="https://zh.wikipedia.org/wiki/STAR%E5%8E%9F%E5%88%99" target="_blank" rel="noopener">STAR 法则</a> ·
+            <a href="https://github.com/sparanoid/chinese-copywriting-guidelines" target="_blank" rel="noopener">中文文案排版指北</a> ·
+            图标可以从 <a href="https://feathericons.com/" target="_blank" rel="noopener">Feather Icons</a> 复制 SVG 直接粘进来。</p>
+
+        <h5>数据在哪</h5>
+        <p>在浏览器的 localStorage 里。清浏览器数据、换浏览器、无痕模式都会丢，
+            所以<b>请定期用「备份全部」导出一份 JSON</b>。单份简历「导出」出来的 <code>.md</code>
+            就是文档本身，样式在里面，扔到别处也能原样渲染。</p>
+
+        <footer>
+            <button @click="dialog = null">知道了</button>
+        </footer>
     </article>
 </dialog>
 
+<!-- ===================== 应用逻辑 ===================== -->
+<script src="vendor/alpine.min.js" defer></script>
 <script>
-    document.addEventListener('alpine:init',
-        () => {
-        Alpine.data('PrivaCV', () => ({
-            init(){
-                require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.51.0/min/vs' } });
+    const STORE_KEY = 'privacv.resumes.v3';
+    const STORE_KEY_V2 = 'privacv.resumes.v2';
+    const LEGACY_KEY = 'resumeList';
+    const PREF_KEY = 'privacv.prefs.v1';
+    const MM = 96 / 25.4;               // 1mm 对应的 CSS px
+    const PAGE_H = 297 * MM;            // A4 高度（px）
+    const DEBOUNCE = 140;
 
-                require(['vs/editor/editor.main'], ()=> {
-                    monaco.languages.css.cssDefaults.setDiagnosticsOptions({
-                        validate: false, // 禁用代码纠错
-                    });
+    /* =====================================================================
+       排版底座：所有简历共用的度量、结构约定和打印规则。
+       模板文件只在自己开头的 <style> 里覆盖下面这些变量 + 几条签名规则，
+       所以每份简历的行距、对齐、分页行为都是一致的。
+       ===================================================================== */
+    const BASE_CSS = `
+@page { size: A4; margin: 0; }
 
-                    window.editor = monaco.editor.create(document.getElementById('editor'), {
-                        value: this.CV.content,
-                        language: 'css',
-                        wordWrap: 'on',
-                        minimap: { enabled: false }, // 禁用小地图
-                        scrollBeyondLastLine: false,
-                        // theme:'vs-dark'
-                    });
+:root {
+  /* --- 版心 --- */
+  --page-x: 18mm;
+  --page-y: 16mm;
 
-                    // 监听编辑器内容变化事件
-                    editor.onDidChangeModelContent((event) => {
-                        console.log("编辑器内容变更为",editor.getValue());
-                        this.CV.content = editor.getValue();
-                        // const height = editor.getModel().getLineCount() * 19.5;
-                        // const visibleRanges = editor.getVisibleRanges()[0].;
-                        // document.getElementById('editor').style.height = `${height}px`;
-                        // editor.layout();
-                    });
+  /* --- 字体（只用本机字体，断网也不掉字形） --- */
+  --font-serif: "Latin Modern Roman", "CMU Serif", XCharter, Charter, "Bitstream Charter",
+                "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman",
+                "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", SimSun, serif;
+  --font-sans:  Inter, "Source Sans 3", "Source Sans Pro", "Helvetica Neue", Helvetica, Arial,
+                "Segoe UI", Roboto, "PingFang SC", "Source Han Sans SC", "Noto Sans CJK SC",
+                "Microsoft YaHei", sans-serif;
+  --font-mono:  "JetBrains Mono", "SF Mono", "Cascadia Mono", Menlo, Consolas, "Courier New", monospace;
+  --font-body:  var(--font-sans);
+  --font-title: var(--font-body);
 
-                });
+  /* --- 字号阶：改 --fs 一个值，整份简历等比缩放 --- */
+  --fs:       10.2pt;
+  --fs-name:  calc(var(--fs) * 2.05);
+  --fs-lead:  calc(var(--fs) * 0.90);
+  --fs-sec:   calc(var(--fs) * 1.06);
+  --fs-item:  var(--fs);
+  --fs-sub:   calc(var(--fs) * 0.92);
+  --fs-small: calc(var(--fs) * 0.88);
 
-                this.$watch('resumeList', (newValue) => {
-                    localStorage.setItem("resumeList",JSON.stringify(newValue))
-                });
+  /* --- 竖向节奏 --- */
+  --lh:      1.5;
+  --sp-sec:  5.4mm;   /* 章节之间 */
+  --sp-item: 3.2mm;   /* 条目之间 */
+  --sp-line: 1.4mm;   /* 段落 / 列表之间 */
 
+  /* --- 颜色：默认纯黑白，主题按需给 --accent 上色 --- */
+  --ink:       #111111;
+  --muted:     #575757;
+  --rule:      #b4b4b4;
+  --rule-soft: #dedede;
+  --accent:    #111111;
+  --tint:      rgba(17, 17, 17, 0.06);
+  --marker:    var(--muted);
+}
+
+* { box-sizing: border-box; }
+
+html { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+body {
+  width: 210mm; min-height: 297mm; margin: 0;
+  padding: var(--page-y) var(--page-x);
+  background: #fff;
+  font-family: var(--font-body);
+  font-size: var(--fs);
+  line-height: var(--lh);
+  color: var(--ink);
+  font-variant-numeric: lining-nums;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  orphans: 2; widows: 2;
+}
+
+/* --- 姓名与联系方式 --- */
+h1 { font-family: var(--font-title); font-size: var(--fs-name); font-weight: 700;
+     line-height: 1.15; letter-spacing: -0.005em; margin: 0 0 1.6mm; }
+h1 + p { font-size: var(--fs-lead); color: var(--muted); line-height: 1.45;
+         margin: 0 0 var(--sp-sec); }
+
+/* --- 章节 / 条目 --- */
+h2 { font-family: var(--font-title); font-size: var(--fs-sec); font-weight: 700;
+     line-height: 1.25; margin: var(--sp-sec) 0 2mm; }
+h2:first-child { margin-top: 0; }
+h3 { font-size: var(--fs-item); font-weight: 600; line-height: 1.3; margin: var(--sp-item) 0 0; }
+h4 { font-size: var(--fs-sub); font-weight: 400; color: var(--muted); line-height: 1.35;
+     margin: 0.4mm 0 var(--sp-line); }
+h5, h6 { font-size: var(--fs-small); font-weight: 600; margin: 2mm 0 0.8mm; }
+
+/* --- 标题末尾 <span> 推到右侧：时间线永远对齐，数字用等宽字形 --- */
+[data-split] { display: flex; align-items: baseline; gap: 5mm; }
+[data-split] > .t { flex: 1 1 auto; min-width: 0; }
+[data-split] > .x {
+  flex: 0 0 auto; margin-left: auto; white-space: nowrap;
+  font-weight: 400; font-style: normal; font-size: 0.95em; color: var(--muted);
+  font-variant-numeric: lining-nums tabular-nums; font-feature-settings: "tnum" 1;
+}
+
+/* --- 正文块 --- */
+p { margin: 0 0 var(--sp-line); }
+ul, ol { margin: var(--sp-line) 0 calc(var(--sp-line) + 0.6mm); padding-left: 4.6mm; }
+li { margin: 0 0 0.9mm; }
+li::marker { color: var(--marker); font-size: 0.9em; }
+li > ul, li > ol { margin: 0.8mm 0 0; }
+a { color: inherit; text-decoration: none; }
+hr { border: 0; border-top: 0.5pt solid var(--rule-soft); margin: 3mm 0; }
+img { max-width: 100%; }
+
+/* 行内 code 当技能标签用，字体跟随正文，不跳成等宽 */
+code { font-family: var(--font-body); font-size: 0.92em; padding: 0.3mm 1.4mm;
+       border-radius: 0.8mm; background: var(--tint); white-space: nowrap; }
+pre { font-family: var(--font-mono); font-size: 0.9em; white-space: pre-wrap; word-break: break-word; }
+pre code { background: none; padding: 0; }
+
+/* 表格默认当「标签 — 内容」两列用，表头只是写给编辑器看的 */
+table { width: 100%; border-collapse: collapse; font-size: 0.96em;
+        margin: var(--sp-line) 0 calc(var(--sp-line) + 0.8mm); }
+thead { display: none; }
+td, th { padding: 0.7mm 0; vertical-align: top; text-align: left; }
+td:first-child { width: 26mm; padding-right: 4mm; font-weight: 600; color: var(--ink); }
+
+blockquote { margin: var(--sp-line) 0; padding: 0 0 0 3.5mm;
+             border-left: 1.2pt solid var(--rule); color: var(--muted); }
+blockquote p:last-child { margin-bottom: 0; }
+
+/* 双栏容器：样式不接管时退化成单栏，不会排版错乱 */
+.cv-grid { display: block; }
+
+/* --- 分页 --- */
+.page-break { break-after: page; page-break-after: always; height: 0; }
+h1, h2, h3, h4 { break-after: avoid; page-break-after: avoid; break-inside: avoid; }
+li, tr, blockquote, img { break-inside: avoid; page-break-inside: avoid; }
+`;
+
+    const SKELETON = '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+        '<style id="base">' + BASE_CSS + '</style>' +
+        '</head><body></body></html>';
+
+    const STARTER_MD = `# 你的名字
+
+职位方向 ⋄ 城市 ⋄ 138-0000-0000 ⋄ you@example.com
+
+## 工作经历
+
+### 公司名称 <span>2022.03 - 至今</span>
+#### 职位 <span>城市</span>
+
+- 用一句话说清楚你做了什么、为什么做、结果如何，尽量带数字。
+- 第二条成果。
+
+## 教育背景
+
+### 学校名称 <span>2018.09 - 2022.06</span>
+#### 专业 · 本科 <span>GPA 3.8/4.0</span>
+
+## 技能
+
+- 技能一、技能二、技能三
+`;
+
+    /** 「自定义样式」按钮往文末追加的起手式：只暴露排版底座的变量 */
+    const STYLE_STARTER = `
+
+<style>
+/* 自定义样式：这里的规则会覆盖排版底座，删掉整块就恢复默认。
+   下面这几个是最常用的旋钮，改 --fs 一个值就能整份等比缩放去凑页数。 */
+:root {
+  --fs: 10.2pt;      /* 正文字号 */
+  --lh: 1.5;         /* 行距 */
+  --page-x: 18mm;    /* 左右页边距 */
+  --page-y: 16mm;    /* 上下页边距 */
+  --sp-sec: 5.4mm;   /* 章节间距 */
+  --sp-item: 3.2mm;  /* 条目间距 */
+  --accent: #111;    /* 强调色 */
+}
+</style>
+`;
+
+    /** 一条完整的经历，省得记 <span> 写在哪 */
+    const ENTRY_SNIPPET = `
+### 公司 / 学校 <span>2023.01 - 至今</span>
+#### 职位 / 专业 <span>城市</span>
+
+- 成果一，尽量带数字。
+- 成果二。
+`;
+
+    marked.setOptions({ gfm: true, breaks: true });
+
+    /* 标题末尾的 <span> 要右对齐。直接给 h3 上 flex 不行——<strong>、<a> 这类
+       内联元素会各自变成独立 flex item，item 开头的空格被吃掉，「A · B」会粘成「A· B」。
+       所以先把左半边整体裹一层再排。 */
+    const RE_SPLIT = /<(h[1-4])\b([^>]*)>([\s\S]*?)<span>([\s\S]*?)<\/span>\s*<\/\1>/g;
+
+    function renderDoc(doc) {
+        return marked.parse(doc || '').replace(RE_SPLIT,
+            (_m, tag, attr, left, right) =>
+                `<${tag}${attr} data-split><span class="t">${left}</span><span class="x">${right}</span></${tag}>`);
+    }
+
+    function uid() {
+        return (crypto.randomUUID && crypto.randomUUID()) ||
+            'r-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    }
+
+    /** 老版本导出的 .md 会在开头带一条主题标记注释，导回来时把它连同那段 CSS 一起留在正文里即可 */
+    const HAS_STYLE = /<style[\s>]/i;
+
+    function download(filename, text, mime) {
+        const url = URL.createObjectURL(new Blob([text], { type: (mime || 'text/plain') + ';charset=utf-8' }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function safeName(s) {
+        return (s || '简历').replace(/[\\/:*?"<>|]/g, '_').slice(0, 60);
+    }
+
+    /** 缩略图只渲染一次，滚动到可视区才开始，避免首页一次跑十几个文档 */
+    const thumbObserver = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            thumbObserver.unobserve(e.target);
+            const fn = e.target.__render;
+            if (fn) fn();
+        }
+    }, { rootMargin: '200px' });
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('privacv', () => ({
+            // ---------- 状态 ----------
+            view: 'library',
+            dialog: null,
+            ui: { theme: 'light' },
+            split: 45,
+            dragging: false,
+            zoom: 'fit',
+            paneW: 800,
+            pages: 1,
+            MM: MM,
+            libraryEpoch: 0,
+            resumes: [],
+            catalog: { templates: [] },
+            cv: { id: null, name: '', doc: '', created: null, modified: null },
+            dirty: false,
+            charCount: 0,
+            toasts: [],
+            _toastSeq: 0,
+            _ed: null,
+            _doc: null,
+            _docTimer: null,
+
+            // ---------- 派生 ----------
+            get sortedResumes() {
+                return [...this.resumes].sort((a, b) =>
+                    String(b.modified || '').localeCompare(String(a.modified || '')));
             },
-            AboutPage:false,
-            EditPage:false,
-            CV:{name:'', content:'',},
-            tempList: [],
-            resumeList:JSON.parse(localStorage.getItem("resumeList"))||[],
-            async loadTempList(){
-                const nameList=["finance.md","sonya.md","frontend.md","developer.md"]
-                for (let name of nameList) {
-                    this.tempList.push({
-                        name:name,
-                        content:await (await fetch(`./temp/${name}`)).text()
-                    })
+
+            /** 文档里有 <style> 就说明这份简历自带排版 */
+            get hasOverride() {
+                return HAS_STYLE.test(this.cv.doc || '');
+            },
+
+            get scale() {
+                if (this.zoom !== 'fit') return this.zoom;
+                // 减去左右 padding 和纸张投影的余量，避免刚好溢出蹦出横向滚动条
+                const avail = this.paneW - 56;
+                if (avail <= 0) return 0.5;
+                return this.clamp(avail / (210 * MM), 0.2, 1.15);
+            },
+
+            // ---------- 初始化 ----------
+            init() {
+                const prefs = this.readJSON(PREF_KEY) || {};
+                this.ui.theme = prefs.theme ||
+                    (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                this.split = this.clamp(prefs.split || 45, 20, 80);
+                this.zoom = prefs.zoom === undefined ? 'fit' : prefs.zoom;
+
+                this.resumes = this.loadResumes();
+                this.loadCatalog();
+
+                this.$nextTick(() => {
+                    this.mountEditor();
+                    this.mountPreview();
+                    this.watchPaneSize();
+                });
+
+                window.addEventListener('keydown', (e) => this.onKey(e));
+                window.addEventListener('beforeunload', (e) => {
+                    // 只有正在编辑时才拦，简历库里没有待保存的东西
+                    if (this.dirty && this.view === 'editor') { e.preventDefault(); e.returnValue = ''; }
+                });
+
+                this.$watch('split', (v) => this.savePrefs({ split: v }));
+                this.$watch('zoom', (v) => this.savePrefs({ zoom: v }));
+                this.$watch('ui.theme', (v) => {
+                    document.documentElement.setAttribute('data-theme', v);
+                    this.savePrefs({ theme: v });
+                });
+                document.documentElement.setAttribute('data-theme', this.ui.theme);
+            },
+
+            // ---------- 存储 ----------
+            readJSON(key) {
+                try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+            },
+
+            savePrefs(patch) {
+                const cur = this.readJSON(PREF_KEY) || {};
+                try { localStorage.setItem(PREF_KEY, JSON.stringify({ ...cur, ...patch })); } catch { /* 无所谓 */ }
+            },
+
+            loadResumes() {
+                const v3 = this.readJSON(STORE_KEY);
+                if (Array.isArray(v3)) return v3;
+
+                // 从老格式迁移，老 key 一律保留，回滚回去数据还在。
+                // 迁移的原则是「像素级不变」：老版本的样式原样内联进文档末尾。
+                const at = () => new Date().toISOString();
+
+                const v2 = this.readJSON(STORE_KEY_V2);
+                if (Array.isArray(v2) && v2.length) {
+                    return this.adopt(v2.map((r) => ({
+                        id: uid(),
+                        name: r.name || '未命名简历',
+                        doc: (r.css || '').trim()
+                            ? `${r.markdown || ''}\n\n<style>\n${r.css.trim()}\n</style>\n`
+                            : (r.markdown || ''),
+                        created: r.created || at(),
+                        modified: r.modified || at(),
+                    })), 'Markdown 和 CSS 已经合并成一份文档，样式在文末的 <style> 块里');
+                }
+
+                const v1 = this.readJSON(LEGACY_KEY);
+                if (Array.isArray(v1) && v1.length) {
+                    return this.adopt(v1.map((r) => {
+                        const t = r.modified ? new Date(r.modified).toISOString() : at();
+                        return {
+                            id: uid(), name: r.name || '未命名简历',
+                            doc: String(r.content || ''),
+                            created: t, modified: t,
+                        };
+                    }), '样式和正文现在写在同一份文档里');
+                }
+
+                return [];
+            },
+
+            /** 迁移结果落盘 + 提示一次，失败也不影响这次会话继续用 */
+            adopt(list, why) {
+                try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); } catch { /* 见 persist */ }
+                setTimeout(() => this.notify(
+                    `已从旧版本迁移 ${list.length} 份简历：${why}`,
+                    { type: 'ok', timeout: 7000 }), 400);
+                return list;
+            },
+
+            persist() {
+                try {
+                    localStorage.setItem(STORE_KEY, JSON.stringify(this.resumes));
+                    return true;
+                } catch (err) {
+                    const kb = Math.round(JSON.stringify(this.resumes).length / 1024);
+                    this.notify(
+                        `保存失败：浏览器本地存储写不进去了（当前约 ${kb} KB，上限通常 5 MB）。` +
+                        `内嵌的图片最占地方，建议先「备份全部」再删掉不用的简历或压缩图片。`,
+                        { type: 'error', timeout: 12000 });
+                    return false;
                 }
             },
-            saveResume() {
-                const newResume = {
-                    name: this.CV.name,
-                    content: editor.getValue(),
-                    modified: new Date().toISOString().split('T')[0],
+
+            // ---------- 模板目录 ----------
+            async loadCatalog() {
+                try {
+                    const res = await fetch('templates.json');
+                    if (!res.ok) throw new Error(res.status);
+                    const data = await res.json();
+                    this.catalog = { templates: data.templates || [] };
+                } catch (err) {
+                    this.notify('模板索引加载失败，模板区暂时不可用（不影响已有简历）', { type: 'warn' });
+                }
+            },
+
+            // ---------- 编辑器 ----------
+            mountEditor() {
+                // gfm 模式遇到内联 HTML 会转交给 htmlmixed，所以文档里的
+                // <style> 块自动是 CSS 高亮，不需要第二个编辑器
+                this._ed = CodeMirror(this.$refs.editorHost, {
+                    theme: 'privacv',
+                    mode: 'gfm',
+                    lineNumbers: true,
+                    lineWrapping: true,
+                    styleActiveLine: true,
+                    matchBrackets: true,
+                    autoCloseBrackets: true,
+                    placeholder: '在这里写简历…',
+                    extraKeys: { 'Ctrl-S': () => this.save(), 'Cmd-S': () => this.save() },
+                });
+
+                this._ed.on('change', () => {
+                    this.cv.doc = this._ed.getValue();
+                    this.charCount = this.cv.doc.replace(/<style[\s\S]*?<\/style>/gi, '').length;
+                    this.dirty = true;
+                    clearTimeout(this._docTimer);
+                    this._docTimer = setTimeout(() => this.paintDoc(), DEBOUNCE);
+                });
+            },
+
+            // ---------- 预览：只建一次文档，之后增量更新 ----------
+            mountPreview() {
+                const frame = this.$refs.preview;
+                frame.addEventListener('load', () => {
+                    this._doc = frame.contentDocument;
+                    this.paintDoc();
+                }, { once: true });
+                frame.srcdoc = SKELETON;
+            },
+
+            paintDoc() {
+                if (!this._doc) return;
+                this._doc.body.innerHTML = renderDoc(this.cv.doc);
+                this.measure();
+            },
+
+            measure() {
+                if (!this._doc) return;
+                // 字体和图片加载完高度才准，下一帧再量一次
+                requestAnimationFrame(() => {
+                    if (!this._doc) return;
+                    const h = this._doc.documentElement.scrollHeight;
+                    this.pages = Math.max(1, Math.ceil((h - 2) / PAGE_H));
+                });
+            },
+
+            watchPaneSize() {
+                const el = this.$refs.previewScroll;
+                if (!el) return;
+                this.paneW = el.clientWidth;
+                new ResizeObserver(() => { this.paneW = el.clientWidth; }).observe(el);
+            },
+
+            setZoom(z) { this.zoom = z; },
+
+            // ---------- 分隔条 ----------
+            startDrag(e) {
+                const ws = e.target.parentElement;
+                const vertical = window.matchMedia('(max-width: 900px)').matches;
+                this.dragging = true;
+                document.body.classList.add('resizing');
+                e.target.setPointerCapture(e.pointerId);
+
+                const move = (ev) => {
+                    const box = ws.getBoundingClientRect();
+                    const pct = vertical
+                        ? ((ev.clientY - box.top) / box.height) * 100
+                        : ((ev.clientX - box.left) / box.width) * 100;
+                    this.split = this.clamp(pct, 20, 80);
                 };
-                // 检查是否存在相同 name 的元素
-                const existingIndex = this.resumeList.findIndex(resume => resume.name === newResume.name);
-                if (existingIndex !== -1) {
-                    // 如果存在相同 name 的元素，则更新该元素
-                    this.resumeList[existingIndex] = newResume;
-                    alert("Resume updated successfully");
-                } else {
-                    // 如果不存在相同 name 的元素，则添加新元素
-                    this.resumeList.push(newResume);
-                    alert("Resume saved successfully");
+                const up = () => {
+                    this.dragging = false;
+                    document.body.classList.remove('resizing');
+                    window.removeEventListener('pointermove', move);
+                    window.removeEventListener('pointerup', up);
+                    this._ed && this._ed.refresh();
+                };
+                window.addEventListener('pointermove', move);
+                window.addEventListener('pointerup', up);
+            },
+
+            clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); },
+
+            // ---------- 简历增删改 ----------
+            createBlank() {
+                this.loadIntoEditor({
+                    id: uid(), name: '未命名简历', doc: STARTER_MD,
+                    created: new Date().toISOString(), modified: null,
+                }, { dirty: true });
+            },
+
+            async useTemplate(t) {
+                try {
+                    const res = await fetch(t.content);
+                    if (!res.ok) throw new Error(t.content);
+                    this.loadIntoEditor({
+                        id: uid(), name: t.name, doc: await res.text(),
+                        created: new Date().toISOString(), modified: null,
+                    }, { dirty: true });
+                    this.notify(`已载入模板「${t.name}」，改完记得保存`, { type: 'ok' });
+                } catch (err) {
+                    this.notify('模板加载失败：' + err.message, { type: 'error' });
                 }
             },
-            exportPDF(){
-                document.getElementById("CVPrinter").contentWindow.print();
+
+            openResume(id) {
+                const r = this.resumes.find((x) => x.id === id);
+                if (!r) return;
+                // 深拷贝：编辑期间不碰列表里的原对象，取消编辑也不会污染
+                this.loadIntoEditor(JSON.parse(JSON.stringify(r)), { dirty: false });
             },
-            edit(val){
-                this.EditPage=true;
-                this.CV=val;
-                editor.getModel().setValue(this.CV.content);
+
+            loadIntoEditor(cv, opts) {
+                this.cv = cv;
+                this.charCount = (cv.doc || '').length;
+                this.view = 'editor';
+                this.dirty = !!(opts && opts.dirty);
+                this.$nextTick(() => {
+                    if (this._ed) {
+                        this._ed.setValue(cv.doc || '');
+                        this._ed.clearHistory();
+                        this._ed.refresh();
+                        this._ed.focus();
+                    }
+                    // setValue 会触发 change 把 dirty 置 true，这里纠正回来
+                    this.dirty = !!(opts && opts.dirty);
+                    this.paintDoc();
+                });
             },
-            copy(val){
-                this.resumeList.push({
-                        name: val.name+' 副本',
-                        content: val.content,
-                        modified: val.modified,
-                })
+
+            save() {
+                if (!this.cv.id) return;
+                if (!this.cv.name.trim()) this.cv.name = '未命名简历';
+                this.cv.modified = new Date().toISOString();
+                const snapshot = JSON.parse(JSON.stringify(this.cv));
+                const i = this.resumes.findIndex((r) => r.id === snapshot.id);
+                if (i === -1) this.resumes.push(snapshot);
+                else this.resumes[i] = snapshot;
+
+                if (this.persist()) {
+                    this.dirty = false;
+                    this.notify(`已保存「${snapshot.name}」`, { type: 'ok', timeout: 1800 });
+                }
             },
-            del(index){
-                this.resumeList.splice(index, 1);
+
+            goLibrary() {
+                if (this.dirty && !confirm('当前简历有未保存的修改，确定离开吗？')) return;
+                this.dirty = false;
+                this.view = 'library';
+                // 卡片按 id 复用 DOM，改过内容后缩略图会是旧的，靠 epoch 强制重建
+                this.libraryEpoch++;
             },
-            async handleFileChange(event){
-                const file = event.target.files[0];
-                if (!file) return
+
+            duplicate(id) {
+                const src = this.resumes.find((r) => r.id === id);
+                if (!src) return;
+                const base = src.name.replace(/\s*\(副本(?: \d+)?\)$/, '');
+                let name = `${base} (副本)`;
+                let n = 2;
+                while (this.resumes.some((r) => r.name === name)) name = `${base} (副本 ${n++})`;
+                const now = new Date().toISOString();
+                this.resumes.push({ ...JSON.parse(JSON.stringify(src)), id: uid(), name, created: now, modified: now });
+                if (this.persist()) this.notify(`已复制为「${name}」`, { type: 'ok' });
+            },
+
+            remove(id) {
+                const i = this.resumes.findIndex((r) => r.id === id);
+                if (i === -1) return;
+                const [gone] = this.resumes.splice(i, 1);
+                this.persist();
+                this.notify(`已删除「${gone.name}」`, {
+                    type: 'warn',
+                    timeout: 8000,
+                    action: {
+                        label: '撤销',
+                        fn: () => {
+                            this.resumes.splice(Math.min(i, this.resumes.length), 0, gone);
+                            this.persist();
+                        },
+                    },
+                });
+            },
+
+            // ---------- 编辑器插入 ----------
+            insertAtCursor(text) {
+                const ed = this._ed;
+                if (!ed) return;
+                ed.replaceSelection(text);
+                ed.focus();
+            },
+
+            insertPageBreak() {
+                this.insertAtCursor('\n\n<div class="page-break"></div>\n\n');
+            },
+
+            insertEntry() {
+                this.insertAtCursor(ENTRY_SNIPPET);
+            },
+
+            /** 已经有 <style> 就跳过去，没有就在文末追加一段带注释的起手式 */
+            editStyle() {
+                const ed = this._ed;
+                if (!ed) return;
+                const at = ed.getValue().search(HAS_STYLE);
+                if (at !== -1) {
+                    const pos = ed.posFromIndex(at);
+                    ed.setCursor(pos);
+                    ed.scrollIntoView(pos, 120);
+                    ed.focus();
+                    return;
+                }
+                const last = ed.lastLine();
+                ed.replaceRange(STYLE_STARTER, { line: last, ch: ed.getLine(last).length });
+                const pos = ed.posFromIndex(ed.getValue().search(HAS_STYLE));
+                ed.setCursor(pos);
+                ed.scrollIntoView(pos, 120);
+                ed.focus();
+                this.notify('样式块已加在文末，改这里就能调整排版', { type: 'ok', timeout: 5000 });
+            },
+
+            insertImage(e) {
+                const file = e.target.files && e.target.files[0];
+                e.target.value = '';
+                if (!file) return;
+                if (file.size > 1024 * 1024) {
+                    this.notify(
+                        `这张图 ${Math.round(file.size / 1024)} KB，内嵌后很容易撑爆浏览器 5MB 的本地存储。建议先压到 200KB 以内。`,
+                        { type: 'warn', timeout: 9000 });
+                }
                 const reader = new FileReader();
-                reader.onload = async (e) => {
-                    const dataUrl = e.target.result;
-                    const imgElement = `<img src="${dataUrl}" alt="Copied Image">`;
-                    try {// 使用 Clipboard API 复制文本
-                        await navigator.clipboard.writeText(imgElement);
-                        alert('图片已复制到您的剪切板，请粘贴使用');
-                    } catch (err) {alert( err);}
+                reader.onload = (ev) => {
+                    this.insertAtCursor(`\n\n![头像](${ev.target.result})\n\n`);
+                    this.notify('图片已内嵌到光标处，用 CSS 的 img 选择器调整大小和位置', { type: 'ok', timeout: 5000 });
                 };
+                reader.onerror = () => this.notify('图片读取失败', { type: 'error' });
                 reader.readAsDataURL(file);
-            }
-        }))
-    })
+            },
+
+            // ---------- 导入导出 ----------
+            /** 文档本身就是完整的一份简历，样式在里面，直接导出原文 */
+            exportOne(cv) {
+                download(`${safeName(cv.name)}.md`, cv.doc || '', 'text/markdown');
+            },
+
+            exportCurrent() {
+                if (this.view === 'editor' && this.cv.id) this.exportOne(this.cv);
+                else this.exportBackup();
+            },
+
+            exportBackup() {
+                if (!this.resumes.length) return this.notify('还没有简历可以备份', { type: 'warn' });
+                const stamp = new Date().toISOString().slice(0, 10);
+                download(`privacv-backup-${stamp}.json`,
+                    JSON.stringify({ app: 'PrivaCV', version: 3, resumes: this.resumes }, null, 2),
+                    'application/json');
+                this.notify(`已导出 ${this.resumes.length} 份简历的备份`, { type: 'ok' });
+            },
+
+            /** 各版本的备份对象 → 当前的单文档结构 */
+            normalize(r, fallbackName) {
+                const now = new Date().toISOString();
+                let doc;
+                if (r.doc !== undefined) {                       // v3
+                    doc = r.doc || '';
+                } else if (r.markdown !== undefined) {           // v2：正文 + 独立 CSS 字段
+                    doc = (r.css || '').trim()
+                        ? `${r.markdown || ''}\n\n<style>\n${r.css.trim()}\n</style>\n`
+                        : (r.markdown || '');
+                } else {                                          // v1：全塞在 content 里
+                    doc = String(r.content || '');
+                }
+                return {
+                    id: uid(), name: r.name || fallbackName, doc,
+                    created: r.created || now, modified: r.modified || now,
+                };
+            },
+
+            async importFiles(e) {
+                const files = [...(e.target.files || [])];
+                e.target.value = '';
+                let added = 0;
+
+                for (const f of files) {
+                    const text = await f.text();
+                    if (f.name.endsWith('.json')) {
+                        let data;
+                        try { data = JSON.parse(text); } catch {
+                            this.notify(`${f.name} 不是合法的 JSON`, { type: 'error' });
+                            continue;
+                        }
+                        const list = Array.isArray(data) ? data : data.resumes;
+                        if (!Array.isArray(list)) {
+                            this.notify(`${f.name} 里没有找到简历列表`, { type: 'error' });
+                            continue;
+                        }
+                        for (const r of list) {
+                            this.resumes.push(this.normalize(r, f.name.replace(/\.json$/i, '')));
+                            added++;
+                        }
+                    } else {
+                        this.resumes.push(this.normalize({ doc: text }, f.name.replace(/\.(md|markdown)$/i, '')));
+                        added++;
+                    }
+                }
+
+                if (!added) return;
+                if (this.persist()) {
+                    this.view = 'library';
+                    this.libraryEpoch++;
+                    this.notify(`已导入 ${added} 份简历`, { type: 'ok' });
+                }
+            },
+
+            // ---------- 打印 ----------
+            printCV() {
+                const w = this.$refs.preview && this.$refs.preview.contentWindow;
+                if (!w) return;
+                w.focus();
+                w.print();
+            },
+
+            // ---------- 缩略图 ----------
+            observeThumb(el, render) {
+                el.__render = render;
+                thumbObserver.observe(el);
+            },
+
+            renderThumb(el, doc) {
+                const frame = document.createElement('iframe');
+                frame.setAttribute('sandbox', 'allow-same-origin');
+                frame.setAttribute('scrolling', 'no');
+                frame.setAttribute('tabindex', '-1');
+                frame.setAttribute('aria-hidden', 'true');
+                frame.srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>' +
+                    BASE_CSS + '</style></head><body>' +
+                    renderDoc(doc) + '</body></html>';
+                el.replaceChildren(frame);
+            },
+
+            async renderTemplateThumb(el, t) {
+                try {
+                    const res = await fetch(t.content);
+                    if (!res.ok) throw new Error(t.content);
+                    this.renderThumb(el, await res.text());
+                } catch {
+                    const ph = el.querySelector('.ph');
+                    if (ph) ph.textContent = '预览加载失败';
+                }
+            },
+
+            // ---------- 杂项 ----------
+            fmtDate(iso) {
+                if (!iso) return '未保存';
+                const d = new Date(iso);
+                if (isNaN(d)) return String(iso);
+                const today = new Date();
+                const sameDay = d.toDateString() === today.toDateString();
+                return sameDay
+                    ? `今天 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+                    : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            },
+
+            toggleTheme() {
+                this.ui.theme = this.ui.theme === 'dark' ? 'light' : 'dark';
+            },
+
+            notify(msg, opts) {
+                const o = opts || {};
+                const id = ++this._toastSeq;
+                this.toasts.push({ id, msg, type: o.type || 'info', action: o.action || null });
+                setTimeout(() => this.dismiss(id), o.timeout || 3200);
+            },
+
+            dismiss(id) {
+                const i = this.toasts.findIndex((t) => t.id === id);
+                if (i !== -1) this.toasts.splice(i, 1);
+            },
+
+            onKey(e) {
+                const mod = e.ctrlKey || e.metaKey;
+                if (mod && e.key.toLowerCase() === 's') {
+                    e.preventDefault();
+                    if (this.view === 'editor') this.save();
+                } else if (mod && e.key.toLowerCase() === 'p') {
+                    if (this.view === 'editor') { e.preventDefault(); this.printCV(); }
+                } else if (e.key === 'Escape') {
+                    this.dialog = null;
+                }
+            },
+        }));
+    });
 </script>
+</body>
+</html>
