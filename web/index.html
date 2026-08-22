@@ -1051,12 +1051,23 @@ code { font-family: var(--font-body); font-size: 0.92em; padding: 0.3mm 1.4mm;
 pre { font-family: var(--font-mono); font-size: 0.9em; white-space: pre-wrap; word-break: break-word; }
 pre code { background: none; padding: 0; }
 
-/* 表格默认当「标签 — 内容」两列用，表头只是写给编辑器看的 */
+/* 表格。这里刻意不给 td 声明 text-align：marked 把 |:---|---:| 编译成
+   <td align="right">，而 align 是表现属性，在层叠里排在作者样式之下——
+   只要写一条 td { text-align: … }，对齐语法就整个失效。要设默认值就带上
+   :not([align])，把写了对齐的单元格让出去。 */
 table { width: 100%; border-collapse: collapse; font-size: 0.96em;
         margin: var(--sp-line) 0 calc(var(--sp-line) + 0.8mm); }
-thead { display: none; }
-td, th { padding: 0.7mm 0; vertical-align: top; text-align: left; }
-td:first-child { width: 26mm; padding-right: 4mm; font-weight: 600; color: var(--ink); }
+
+/* 表头留空 = 只为凑 GFM 语法，不印；写了字就当真表头显示 */
+thead:not(:has(th:not(:empty))) { display: none; }
+th { font-weight: 600; border-bottom: 0.5pt solid var(--rule-soft); }
+th:not([align]) { text-align: left; }
+
+td, th { padding: 0.7mm 0; vertical-align: top; }
+
+/* 恰好两列时当「标签 — 内容」排；三列以上是真表格，第一列不动 */
+tr:has(> td:nth-child(2):last-child) > td:first-child {
+    width: 26mm; padding-right: 4mm; font-weight: 600; color: var(--ink); }
 
 blockquote { margin: var(--sp-line) 0; padding: 0 0 0 3.5mm;
              border-left: 1.2pt solid var(--rule); color: var(--muted); }
@@ -1171,6 +1182,12 @@ li, tr, blockquote, img { break-inside: avoid; page-break-inside: avoid; }
     }, { rootMargin: '200px' });
 
     document.addEventListener('alpine:init', () => {
+        // 编辑器实例、iframe document 这类外部对象绝对不能放进下面的 Alpine 数据对象：
+        // Alpine 会把它们（连同内部的 DOM 节点）包成 Proxy，而 CodeMirror 的鼠标定位
+        // 靠 node === display.lineDiv 这类身份比较，代理一掺进来就不相等，
+        // 表现就是点击时光标乱跳。放在闭包里，Alpine 碰不到。
+        const ext = { ed: null, doc: null, docTimer: null };
+
         Alpine.data('privacv', () => ({
             // ---------- 状态 ----------
             view: 'library',
@@ -1190,9 +1207,6 @@ li, tr, blockquote, img { break-inside: avoid; page-break-inside: avoid; }
             charCount: 0,
             toasts: [],
             _toastSeq: 0,
-            _ed: null,
-            _doc: null,
-            _docTimer: null,
 
             // ---------- 派生 ----------
             get sortedResumes() {
@@ -1330,7 +1344,7 @@ li, tr, blockquote, img { break-inside: avoid; page-break-inside: avoid; }
             mountEditor() {
                 // gfm 模式遇到内联 HTML 会转交给 htmlmixed，所以文档里的
                 // <style> 块自动是 CSS 高亮，不需要第二个编辑器
-                this._ed = CodeMirror(this.$refs.editorHost, {
+                ext.ed = CodeMirror(this.$refs.editorHost, {
                     theme: 'privacv',
                     mode: 'gfm',
                     lineNumbers: true,
@@ -1342,12 +1356,12 @@ li, tr, blockquote, img { break-inside: avoid; page-break-inside: avoid; }
                     extraKeys: { 'Ctrl-S': () => this.save(), 'Cmd-S': () => this.save() },
                 });
 
-                this._ed.on('change', () => {
-                    this.cv.doc = this._ed.getValue();
+                ext.ed.on('change', () => {
+                    this.cv.doc = ext.ed.getValue();
                     this.charCount = this.cv.doc.replace(/<style[\s\S]*?<\/style>/gi, '').length;
                     this.dirty = true;
-                    clearTimeout(this._docTimer);
-                    this._docTimer = setTimeout(() => this.paintDoc(), DEBOUNCE);
+                    clearTimeout(ext.docTimer);
+                    ext.docTimer = setTimeout(() => this.paintDoc(), DEBOUNCE);
                 });
             },
 
@@ -1355,24 +1369,24 @@ li, tr, blockquote, img { break-inside: avoid; page-break-inside: avoid; }
             mountPreview() {
                 const frame = this.$refs.preview;
                 frame.addEventListener('load', () => {
-                    this._doc = frame.contentDocument;
+                    ext.doc = frame.contentDocument;
                     this.paintDoc();
                 }, { once: true });
                 frame.srcdoc = SKELETON;
             },
 
             paintDoc() {
-                if (!this._doc) return;
-                this._doc.body.innerHTML = renderDoc(this.cv.doc);
+                if (!ext.doc) return;
+                ext.doc.body.innerHTML = renderDoc(this.cv.doc);
                 this.measure();
             },
 
             measure() {
-                if (!this._doc) return;
+                if (!ext.doc) return;
                 // 字体和图片加载完高度才准，下一帧再量一次
                 requestAnimationFrame(() => {
-                    if (!this._doc) return;
-                    const h = this._doc.documentElement.scrollHeight;
+                    if (!ext.doc) return;
+                    const h = ext.doc.documentElement.scrollHeight;
                     this.pages = Math.max(1, Math.ceil((h - 2) / PAGE_H));
                 });
             },
@@ -1406,7 +1420,7 @@ li, tr, blockquote, img { break-inside: avoid; page-break-inside: avoid; }
                     document.body.classList.remove('resizing');
                     window.removeEventListener('pointermove', move);
                     window.removeEventListener('pointerup', up);
-                    this._ed && this._ed.refresh();
+                    ext.ed && ext.ed.refresh();
                 };
                 window.addEventListener('pointermove', move);
                 window.addEventListener('pointerup', up);
@@ -1449,11 +1463,11 @@ li, tr, blockquote, img { break-inside: avoid; page-break-inside: avoid; }
                 this.view = 'editor';
                 this.dirty = !!(opts && opts.dirty);
                 this.$nextTick(() => {
-                    if (this._ed) {
-                        this._ed.setValue(cv.doc || '');
-                        this._ed.clearHistory();
-                        this._ed.refresh();
-                        this._ed.focus();
+                    if (ext.ed) {
+                        ext.ed.setValue(cv.doc || '');
+                        ext.ed.clearHistory();
+                        ext.ed.refresh();
+                        ext.ed.focus();
                     }
                     // setValue 会触发 change 把 dirty 置 true，这里纠正回来
                     this.dirty = !!(opts && opts.dirty);
@@ -1516,7 +1530,7 @@ li, tr, blockquote, img { break-inside: avoid; page-break-inside: avoid; }
 
             // ---------- 编辑器插入 ----------
             insertAtCursor(text) {
-                const ed = this._ed;
+                const ed = ext.ed;
                 if (!ed) return;
                 ed.replaceSelection(text);
                 ed.focus();
@@ -1532,7 +1546,7 @@ li, tr, blockquote, img { break-inside: avoid; page-break-inside: avoid; }
 
             /** 已经有 <style> 就跳过去，没有就在文末追加一段带注释的起手式 */
             editStyle() {
-                const ed = this._ed;
+                const ed = ext.ed;
                 if (!ed) return;
                 const at = ed.getValue().search(HAS_STYLE);
                 if (at !== -1) {
