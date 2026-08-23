@@ -1058,15 +1058,16 @@ pre code { background: none; padding: 0; }
 table { width: 100%; border-collapse: collapse; font-size: 0.96em;
         margin: var(--sp-line) 0 calc(var(--sp-line) + 0.8mm); }
 
-/* 表头留空 = 只为凑 GFM 语法，不印；写了字就当真表头显示 */
-thead:not(:has(th:not(:empty))) { display: none; }
+/* renderDoc 会把「表头全为空」的 thead 删掉（那只是凑 GFM 语法的占位），
+   写了字的 thead 保留并当真表头显示。 */
 th { font-weight: 600; border-bottom: 0.5pt solid var(--rule-soft); }
 th:not([align]) { text-align: left; }
 
 td, th { padding: 0.7mm 0; vertical-align: top; }
 
-/* 恰好两列时当「标签 — 内容」排；三列以上是真表格，第一列不动 */
-tr:has(> td:nth-child(2):last-child) > td:first-child {
+/* renderDoc 给「恰好两列」的表格打 .kv，当作「标签 — 内容」排；
+   三列以上是真表格，第一列不动。DevTools 里看 .kv 就知道命中原因。 */
+.kv > tbody > tr > td:first-child {
     width: 26mm; padding-right: 4mm; font-weight: 600; color: var(--ink); }
 
 blockquote { margin: var(--sp-line) 0; padding: 0 0 0 3.5mm;
@@ -1142,10 +1143,26 @@ li, tr, blockquote, img { break-inside: avoid; page-break-inside: avoid; }
        所以先把左半边整体裹一层再排。 */
     const RE_SPLIT = /<(h[1-4])\b([^>]*)>([\s\S]*?)<span>([\s\S]*?)<\/span>\s*<\/\1>/g;
 
+    function annotateTables(html) {
+        const tpl = document.createElement('template');
+        tpl.innerHTML = html;
+        for (const table of tpl.content.querySelectorAll('table')) {
+            const rows = table.querySelectorAll('tbody > tr');
+            if (rows.length && [...rows].every((row) => row.children.length === 2)) {
+                table.classList.add('kv');
+            }
+            const thead = table.querySelector('thead');
+            if (thead && ![...thead.querySelectorAll('th')].some((th) => th.textContent.trim())) {
+                thead.remove();
+            }
+        }
+        return tpl.innerHTML;
+    }
+
     function renderDoc(doc) {
-        return marked.parse(doc || '').replace(RE_SPLIT,
+        return annotateTables(marked.parse(doc || '').replace(/<script\b[\s\S]*?<\/script>/gi, '').replace(RE_SPLIT,
             (_m, tag, attr, left, right) =>
-                `<${tag}${attr} data-split><span class="t">${left}</span><span class="x">${right}</span></${tag}>`);
+                `<${tag}${attr} data-split><span class="t">${left}</span><span class="x">${right}</span></${tag}>`));
     }
 
     function uid() {
