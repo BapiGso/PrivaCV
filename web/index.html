@@ -853,35 +853,40 @@
 
 ## 章节标题
 
-### 公司 / 学校 &lt;span&gt;2021.06 - 至今&lt;/span&gt;
-#### 职位 / 专业 &lt;span&gt;城市&lt;/span&gt;
+### 公司 / 学校 *2021.06 - 至今*
+#### 职位 / 专业 *城市*
 
 - 用 STAR 法则写成果，尽量带数字</code></pre>
-        <p>标题末尾的 <code>&lt;span&gt;</code> 会被推到右边对齐，用来放时间和地点，数字走等宽字形，
-            所以时间线永远是齐的。<code>`行内代码`</code> 会渲染成技能标签，
-            两列表格会渲染成「标签 — 内容」（表头行只是写给编辑器看的，不会印出来）。</p>
+        <p>时间和地点写成 Markdown 斜体放在标题末尾，模板里一条
+            <code>h3 em { float: right }</code> 就把它推到右边——所以正文里不需要写任何 HTML。</p>
 
         <h5>改样式</h5>
-        <p>模板自带的排版都写在文档开头的 <code>&lt;style&gt;</code> 里，直接改就行。空白简历没有样式块，
-            点工具栏的「自定义样式」会在文末追加一段，里面写规则就能覆盖底座样式，删掉整段就恢复默认。
-            最常用的几个变量已经列在注释里了：</p>
-        <pre><code>&lt;style&gt;
-:root {
-  --fs: 10.2pt;      /* 正文字号，改它一份简历等比缩放 */
-  --lh: 1.5;         /* 行距 */
-  --page-x: 18mm;    /* 左右页边距 */
-  --accent: #111;    /* 强调色 */
-}
-&lt;/style&gt;</code></pre>
-        <p>凑页数优先动 <code>--fs</code> 和 <code>--sp-sec</code>，别去删内容。</p>
+        <p>一份 <code>.md</code> 就是一整份简历：排版全写在文档开头的
+            <code>&lt;style&gt;</code> 里，你看到的就是全部，没有别的地方在影响它。
+            直接改那段 CSS 就行，改哪里哪里变。</p>
+        <p>预览时只额外加两件事——纸张尺寸（A4）和打印时不要把标题、列表项、表格行撕成两页。
+            这是纸的物理约束，跟长相无关。</p>
+        <p>空白简历自带一份精简样式。如果你从别处导入的 <code>.md</code> 没有样式块，
+            点工具栏的「自定义样式」会在文末补一份完整的，照着改即可。
+            凑页数优先动 <code>body</code> 的 <code>font-size</code> 和 <code>h2</code> 的
+            <code>margin</code>，别去删内容。</p>
 
         <h5>分页</h5>
         <p>在需要断开的地方插入 <code>&lt;div class="page-break"&gt;&lt;/div&gt;</code>（工具栏「插入分页」按钮会帮你写），
             打印时就会从这里翻页。标题、列表项、表格行默认不会被撕成两页。</p>
 
+        <h5>表格</h5>
+        <p>GFM 的表格语法要求有表头行。当表头只是占位、不想印出来时，把它留空，
+            并在样式里写 <code>thead { display: none; }</code>（模板都是这么做的）：</p>
+        <pre><code>|  |  |
+|:--|:--|
+| 语言 | 中文、英语 |
+| 输出 | 技术博客 60+ 篇 |</code></pre>
+
         <h5>双栏</h5>
         <p>「校招 · 双栏一页」和「English · Sidebar」两份模板的样式需要内容里有下面这样的容器，注意 <code>&lt;div&gt;</code> 后面要空一行，
-            Markdown 才会继续解析。其余模板遇到这个容器会自动退化成单栏，不会排版错乱：</p>
+            Markdown 才会继续解析。这两个类名由那两份模板自己的样式定义，换成别的模板就是普通的
+            <code>&lt;div&gt;</code>，内容照常显示：</p>
         <pre><code>&lt;div class="cv-grid"&gt;
 &lt;div class="sidebar"&gt;
 
@@ -944,140 +949,16 @@
     const PAGE_H = 297 * MM;            // A4 高度（px）
     const DEBOUNCE = 140;
 
-    /* =====================================================================
-       排版底座：所有简历共用的度量、结构约定和打印规则。
-       模板文件只在自己开头的 <style> 里覆盖下面这些变量 + 几条签名规则，
-       所以每份简历的行距、对齐、分页行为都是一致的。
-       ===================================================================== */
+    /* 纸张与打印约束。只放「这是一张 A4 纸」和「别把条目撕成两页」——
+       都是物理事实，不是审美。「简历该长什么样」的决定全部属于文档自己的
+       <style>：一份 .md 打开就是全部，没有第二个地方在偷偷影响它。 */
     const BASE_CSS = `
 @page { size: A4; margin: 0; }
 
-:root {
-  /* --- 版心 --- */
-  --page-x: 18mm;
-  --page-y: 16mm;
-
-  /* --- 字体（只用本机字体，断网也不掉字形） --- */
-  --font-serif: "Latin Modern Roman", "CMU Serif", XCharter, Charter, "Bitstream Charter",
-                "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman",
-                "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", SimSun, serif;
-  --font-sans:  Inter, "Source Sans 3", "Source Sans Pro", "Helvetica Neue", Helvetica, Arial,
-                "Segoe UI", Roboto, "PingFang SC", "Source Han Sans SC", "Noto Sans CJK SC",
-                "Microsoft YaHei", sans-serif;
-  --font-mono:  "JetBrains Mono", "SF Mono", "Cascadia Mono", Menlo, Consolas, "Courier New", monospace;
-  --font-body:  var(--font-sans);
-  --font-title: var(--font-body);
-
-  /* --- 字号阶：改 --fs 一个值，整份简历等比缩放 --- */
-  --fs:       10.2pt;
-  --fs-name:  calc(var(--fs) * 2.05);
-  --fs-lead:  calc(var(--fs) * 0.90);
-  --fs-sec:   calc(var(--fs) * 1.06);
-  --fs-item:  var(--fs);
-  --fs-sub:   calc(var(--fs) * 0.92);
-  --fs-small: calc(var(--fs) * 0.88);
-
-  /* --- 竖向节奏 --- */
-  --lh:      1.5;
-  --sp-sec:  5.4mm;   /* 章节之间 */
-  --sp-item: 3.2mm;   /* 条目之间 */
-  --sp-line: 1.4mm;   /* 段落 / 列表之间 */
-
-  /* --- 颜色：默认纯黑白，主题按需给 --accent 上色 --- */
-  --ink:       #111111;
-  --muted:     #575757;
-  --rule:      #b4b4b4;
-  --rule-soft: #dedede;
-  --accent:    #111111;
-  --tint:      rgba(17, 17, 17, 0.06);
-  --marker:    var(--muted);
-}
-
-* { box-sizing: border-box; }
-
 html { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-
-body {
-  width: 210mm; min-height: 297mm; margin: 0;
-  padding: var(--page-y) var(--page-x);
-  background: #fff;
-  font-family: var(--font-body);
-  font-size: var(--fs);
-  line-height: var(--lh);
-  color: var(--ink);
-  font-variant-numeric: lining-nums;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  orphans: 2; widows: 2;
-}
-
-/* --- 姓名与联系方式 --- */
-h1 { font-family: var(--font-title); font-size: var(--fs-name); font-weight: 700;
-     line-height: 1.15; letter-spacing: -0.005em; margin: 0 0 1.6mm; }
-h1 + p { font-size: var(--fs-lead); color: var(--muted); line-height: 1.45;
-         margin: 0 0 var(--sp-sec); }
-
-/* --- 章节 / 条目 --- */
-h2 { font-family: var(--font-title); font-size: var(--fs-sec); font-weight: 700;
-     line-height: 1.25; margin: var(--sp-sec) 0 2mm; }
-h2:first-child { margin-top: 0; }
-h3 { font-size: var(--fs-item); font-weight: 600; line-height: 1.3; margin: var(--sp-item) 0 0; }
-h4 { font-size: var(--fs-sub); font-weight: 400; color: var(--muted); line-height: 1.35;
-     margin: 0.4mm 0 var(--sp-line); }
-h5, h6 { font-size: var(--fs-small); font-weight: 600; margin: 2mm 0 0.8mm; }
-
-/* --- 标题末尾 <span> 推到右侧：时间线永远对齐，数字用等宽字形 --- */
-[data-split] { display: flex; align-items: baseline; gap: 5mm; }
-[data-split] > .t { flex: 1 1 auto; min-width: 0; }
-[data-split] > .x {
-  flex: 0 0 auto; margin-left: auto; white-space: nowrap;
-  font-weight: 400; font-style: normal; font-size: 0.95em; color: var(--muted);
-  font-variant-numeric: lining-nums tabular-nums; font-feature-settings: "tnum" 1;
-}
-
-/* --- 正文块 --- */
-p { margin: 0 0 var(--sp-line); }
-ul, ol { margin: var(--sp-line) 0 calc(var(--sp-line) + 0.6mm); padding-left: 4.6mm; }
-li { margin: 0 0 0.9mm; }
-li::marker { color: var(--marker); font-size: 0.9em; }
-li > ul, li > ol { margin: 0.8mm 0 0; }
-a { color: inherit; text-decoration: none; }
-hr { border: 0; border-top: 0.5pt solid var(--rule-soft); margin: 3mm 0; }
+body { width: 210mm; min-height: 297mm; margin: 0; background: #fff; }
 img { max-width: 100%; }
 
-/* 行内 code 当技能标签用，字体跟随正文，不跳成等宽 */
-code { font-family: var(--font-body); font-size: 0.92em; padding: 0.3mm 1.4mm;
-       border-radius: 0.8mm; background: var(--tint); white-space: nowrap; }
-pre { font-family: var(--font-mono); font-size: 0.9em; white-space: pre-wrap; word-break: break-word; }
-pre code { background: none; padding: 0; }
-
-/* 表格。这里刻意不给 td 声明 text-align：marked 把 |:---|---:| 编译成
-   <td align="right">，而 align 是表现属性，在层叠里排在作者样式之下——
-   只要写一条 td { text-align: … }，对齐语法就整个失效。要设默认值就带上
-   :not([align])，把写了对齐的单元格让出去。 */
-table { width: 100%; border-collapse: collapse; font-size: 0.96em;
-        margin: var(--sp-line) 0 calc(var(--sp-line) + 0.8mm); }
-
-/* renderDoc 会把「表头全为空」的 thead 删掉（那只是凑 GFM 语法的占位），
-   写了字的 thead 保留并当真表头显示。 */
-th { font-weight: 600; border-bottom: 0.5pt solid var(--rule-soft); }
-th:not([align]) { text-align: left; }
-
-td, th { padding: 0.7mm 0; vertical-align: top; }
-
-/* renderDoc 给「恰好两列」的表格打 .kv，当作「标签 — 内容」排；
-   三列以上是真表格，第一列不动。DevTools 里看 .kv 就知道命中原因。 */
-.kv > tbody > tr > td:first-child {
-    width: 26mm; padding-right: 4mm; font-weight: 600; color: var(--ink); }
-
-blockquote { margin: var(--sp-line) 0; padding: 0 0 0 3.5mm;
-             border-left: 1.2pt solid var(--rule); color: var(--muted); }
-blockquote p:last-child { margin-bottom: 0; }
-
-/* 双栏容器：样式不接管时退化成单栏，不会排版错乱 */
-.cv-grid { display: block; }
-
-/* --- 分页 --- */
 .page-break { break-after: page; page-break-after: always; height: 0; }
 h1, h2, h3, h4 { break-after: avoid; page-break-after: avoid; break-inside: avoid; }
 li, tr, blockquote, img { break-inside: avoid; page-break-inside: avoid; }
@@ -1087,50 +968,99 @@ li, tr, blockquote, img { break-inside: avoid; page-break-inside: avoid; }
         '<style id="base">' + BASE_CSS + '</style>' +
         '</head><body></body></html>';
 
-    const STARTER_MD = `# 你的名字
+    /* 空白简历。样式写全在文档里——新建出来就是一份能直接改、能直接导出的
+       完整简历，不依赖任何外部样式。想换风格就改这段，或者整段删掉重写。 */
+    const STARTER_MD = `<style>
+body {
+    padding: 16mm 18mm;
+    font: 10.5pt/1.6 "PingFang SC", "Microsoft YaHei", Helvetica, Arial, sans-serif;
+    color: #222;
+}
+
+h1 { font-size: 2em; margin: 0 0 2mm; }
+h1 + p { color: #666; margin: 0 0 6mm; }
+
+h2 {
+    font-size: 1.1em;
+    margin: 6mm 0 2mm;
+    padding-bottom: 1mm;
+    border-bottom: 1px solid #ddd;
+}
+
+h3 { font-size: 1em; margin: 4mm 0 0; }
+h4 { font-size: 0.95em; font-weight: 400; color: #666; margin: 0 0 1.5mm; }
+
+/* 时间和地点写成斜体，浮到右边——所以标题行不用手写 HTML */
+h3 em, h4 em { float: right; font-style: normal; color: #666; }
+
+p { margin: 0 0 1.5mm; }
+ul { margin: 1.5mm 0; padding-left: 5mm; }
+li { margin-bottom: 1mm; }
+a { color: inherit; }
+</style>
+
+# 你的名字
 
 职位方向 ⋄ 城市 ⋄ 138-0000-0000 ⋄ you@example.com
 
 ## 工作经历
 
-### 公司名称 <span>2022.03 - 至今</span>
-#### 职位 <span>城市</span>
+### 公司名称 *2022.03 - 至今*
+#### 职位 *城市*
 
 - 用一句话说清楚你做了什么、为什么做、结果如何，尽量带数字。
 - 第二条成果。
 
 ## 教育背景
 
-### 学校名称 <span>2018.09 - 2022.06</span>
-#### 专业 · 本科 <span>GPA 3.8/4.0</span>
+### 学校名称 *2018.09 - 2022.06*
+#### 专业 · 本科 *GPA 3.8/4.0*
 
 ## 技能
 
 - 技能一、技能二、技能三
 `;
 
-    /** 「自定义样式」按钮往文末追加的起手式：只暴露排版底座的变量 */
+    /** 「自定义样式」按钮：给没有样式块的文档补一份能直接用的完整排版 */
     const STYLE_STARTER = `
 
 <style>
-/* 自定义样式：这里的规则会覆盖排版底座，删掉整块就恢复默认。
-   下面这几个是最常用的旋钮，改 --fs 一个值就能整份等比缩放去凑页数。 */
-:root {
-  --fs: 10.2pt;      /* 正文字号 */
-  --lh: 1.5;         /* 行距 */
-  --page-x: 18mm;    /* 左右页边距 */
-  --page-y: 16mm;    /* 上下页边距 */
-  --sp-sec: 5.4mm;   /* 章节间距 */
-  --sp-item: 3.2mm;  /* 条目间距 */
-  --accent: #111;    /* 强调色 */
+/* 这份文档的全部排版。改哪里，哪里就变，没有别的地方影响它。 */
+body {
+    padding: 16mm 18mm;
+    font: 10.5pt/1.6 "PingFang SC", "Microsoft YaHei", Helvetica, Arial, sans-serif;
+    color: #222;
 }
+
+h1 { font-size: 2em; margin: 0 0 2mm; }
+h1 + p { color: #666; margin: 0 0 6mm; }
+
+h2 {
+    font-size: 1.1em;
+    margin: 6mm 0 2mm;
+    padding-bottom: 1mm;
+    border-bottom: 1px solid #ddd;
+}
+
+h3 { font-size: 1em; margin: 4mm 0 0; }
+h4 { font-size: 0.95em; font-weight: 400; color: #666; margin: 0 0 1.5mm; }
+
+/* 时间和地点写成斜体，浮到右边 */
+h3 em, h4 em { float: right; font-style: normal; color: #666; }
+
+p { margin: 0 0 1.5mm; }
+ul { margin: 1.5mm 0; padding-left: 5mm; }
+li { margin-bottom: 1mm; }
+a { color: inherit; }
+table { width: 100%; border-collapse: collapse; }
+td { padding: 0.7mm 0; vertical-align: top; }
 </style>
 `;
 
-    /** 一条完整的经历，省得记 <span> 写在哪 */
+    /** 一条完整的经历 */
     const ENTRY_SNIPPET = `
-### 公司 / 学校 <span>2023.01 - 至今</span>
-#### 职位 / 专业 <span>城市</span>
+### 公司 / 学校 *2023.01 - 至今*
+#### 职位 / 专业 *城市*
 
 - 成果一，尽量带数字。
 - 成果二。
@@ -1138,31 +1068,10 @@ li, tr, blockquote, img { break-inside: avoid; page-break-inside: avoid; }
 
     marked.setOptions({ gfm: true, breaks: true });
 
-    /* 标题末尾的 <span> 要右对齐。直接给 h3 上 flex 不行——<strong>、<a> 这类
-       内联元素会各自变成独立 flex item，item 开头的空格被吃掉，「A · B」会粘成「A· B」。
-       所以先把左半边整体裹一层再排。 */
-    const RE_SPLIT = /<(h[1-4])\b([^>]*)>([\s\S]*?)<span>([\s\S]*?)<\/span>\s*<\/\1>/g;
-
-    function annotateTables(html) {
-        const tpl = document.createElement('template');
-        tpl.innerHTML = html;
-        for (const table of tpl.content.querySelectorAll('table')) {
-            const rows = table.querySelectorAll('tbody > tr');
-            if (rows.length && [...rows].every((row) => row.children.length === 2)) {
-                table.classList.add('kv');
-            }
-            const thead = table.querySelector('thead');
-            if (thead && ![...thead.querySelectorAll('th')].some((th) => th.textContent.trim())) {
-                thead.remove();
-            }
-        }
-        return tpl.innerHTML;
-    }
-
+    /** Markdown 原样渲染，只去掉 <script>。没有别的改写——预览里看到的 DOM
+        就是 marked 的输出，DevTools 里看到什么，CSS 就按什么写。 */
     function renderDoc(doc) {
-        return annotateTables(marked.parse(doc || '').replace(/<script\b[\s\S]*?<\/script>/gi, '').replace(RE_SPLIT,
-            (_m, tag, attr, left, right) =>
-                `<${tag}${attr} data-split><span class="t">${left}</span><span class="x">${right}</span></${tag}>`));
+        return marked.parse(doc || '').replace(/<script\b[\s\S]*?<\/script>/gi, '');
     }
 
     function uid() {

@@ -35,6 +35,10 @@
         width: 100%;
         padding: 0 0 0 37px;
     }
+    /* GFM 要求表格有表头行，留空即可；这里把它藏起来 */
+    thead{
+        display: none;
+    }
     table tr:nth-child(1)  {
         font-family: Garamond, serif;
     }

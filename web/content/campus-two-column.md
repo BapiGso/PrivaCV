@@ -15,32 +15,23 @@
          建议只做一页、只投人工渠道。
    =========================================================== */
 
-:root {
-    --font-body: var(--font-sans);
-
-    --fs: 9.4pt;
-    --lh: 1.4;
-    --fs-name: 27pt;
-    --fs-sec: 9.8pt;
-
-    --page-x: 15mm;
-    --page-y: 13mm;
-    --sp-sec: 4.6mm;
-    --sp-item: 2.8mm;
-    --sp-line: 1mm;
-
-    --ink: #1b1b1b;
-    --muted: #666;
-    --rule: #1b1b1b;
-    --rule-soft: #dcdcdc;
-    --tint: #f0f0f0;
+body {
+    padding: 13mm 15mm;
+    font-family: Inter, "Source Sans 3", "Helvetica Neue", Helvetica, Arial,
+                 "Segoe UI", Roboto, "PingFang SC", "Source Han Sans SC",
+                 "Microsoft YaHei", sans-serif;
+    font-size: 9.4pt;
+    line-height: 1.4;
+    color: #1b1b1b;
 }
 
 /* --- 通栏头部 --- */
 h1 {
     text-align: center;
     font-weight: 300;
+    font-size: 27pt;
     letter-spacing: 0.01em;
+    line-height: 1.15;
     margin: 0 0 1.6mm;
 }
 
@@ -48,11 +39,12 @@ h1 strong { font-weight: 700; }
 
 h1 + p {
     text-align: center;
-    font-size: calc(var(--fs) * 0.94);
+    font-size: 8.84pt;
+    color: #666;
     line-height: 1.5;
     margin: 0 0 5mm;
     padding-bottom: 3.4mm;
-    border-bottom: 0.5pt solid var(--rule-soft);
+    border-bottom: 0.5pt solid #dcdcdc;
 }
 
 /* --- 4:6 双栏，中间一条贯穿到底的发丝线 --- */
@@ -61,7 +53,7 @@ h1 + p {
     grid-template-columns: 36% 1fr;
     column-gap: 8mm;
     align-items: start;
-    background: linear-gradient(var(--rule-soft), var(--rule-soft)) no-repeat;
+    background: linear-gradient(#dcdcdc, #dcdcdc) no-repeat;
     background-size: 0.4pt 100%;
     background-position: calc(36% + 4mm) 0;
 }
@@ -73,28 +65,57 @@ h2 {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.16em;
-    font-size: var(--fs-sec);
+    font-size: 9.8pt;
+    line-height: 1.25;
     padding-bottom: 0.8mm;
-    border-bottom: 0.7pt solid var(--rule);
-    margin: var(--sp-sec) 0 1.6mm;
+    border-bottom: 0.7pt solid #1b1b1b;
+    margin: 4.6mm 0 1.6mm;
 }
+
+/* 两栏各自的头一个章节标题贴着栏顶 */
+.sidebar h2:first-of-type,
+.main h2:first-of-type { margin-top: 0; }
 
 h3 {
     font-weight: 700;
-    font-size: calc(var(--fs) * 1.04);
+    font-size: 9.78pt;
+    line-height: 1.3;
+    margin: 2.8mm 0 0;
 }
 
 h4 {
     font-style: italic;
-    color: var(--muted);
+    font-weight: 400;
+    font-size: 8.65pt;
+    color: #666;
+    line-height: 1.35;
+    margin: 0.4mm 0 1mm;
 }
 
-[data-split] { gap: 3mm; }
-[data-split] > .x { font-size: 0.92em; }
+/* 时间和地点：斜体写在标题末尾，浮到右边 */
+h3 em, h4 em {
+    float: right;
+    font-weight: 400;
+    font-size: 0.92em;
+    font-variant-numeric: tabular-nums;
+}
+h3 em { font-style: normal; }
 
-ul { padding-left: 4mm; }
-li { margin-bottom: 0.6mm; }
-li::marker { font-size: 0.8em; }
+/* 左栏只有 36% 宽，浮动会把标题挤散，在那儿就当普通斜体 */
+.sidebar h3 em, .sidebar h4 em { float: none; }
+
+p { margin: 0 0 1mm; }
+ul, ol { margin: 1mm 0 1.6mm; padding-left: 4mm; }
+li { margin: 0 0 0.6mm; }
+li::marker { color: #666; font-size: 0.8em; }
+a { color: inherit; text-decoration: none; }
+
+blockquote {
+    margin: 1mm 0;
+    padding: 0 0 0 3.5mm;
+    border-left: 1.2pt solid #1b1b1b;
+    color: #666;
+}
 
 /* 左栏更紧、更像一张清单 */
 .sidebar { font-size: 0.97em; }
@@ -107,13 +128,15 @@ li::marker { font-size: 0.8em; }
     font-size: 0.94em;
 }
 
+/* 行内 code 当技能标签用：浅底圆角，字体跟正文走 */
 code {
-    font-family: var(--font-body);
+    font-family: inherit;
     font-size: 0.94em;
+    padding: 0.3mm 1.4mm;
     border-radius: 0.8mm;
+    background: #f0f0f0;
+    white-space: nowrap;
 }
-
-td:first-child { width: 18mm; }
 </style>
 
 # 周雨桐
@@ -169,37 +192,37 @@ td:first-child { width: 18mm; }
 
 ## 实习经历
 
-### 某互联网公司 · 搜索算法组 <span>2025.06 - 2025.09</span>
-#### 算法实习生 <span>北京</span>
+### 某互联网公司 · 搜索算法组 *2025.06 - 2025.09*
+#### 算法实习生 *北京*
 
 - 负责查询改写模型的迭代，用对比学习替换原有的规则同义词表，长尾 query 召回率提升 8.3%。
 - 把线上精排模型从 FP32 量化到 INT8，推理延迟下降 41%，离线 AUC 仅损失 0.0008。
 - 搭建一套特征漂移监控，上线后提前发现两次因上游埋点变更导致的特征失效。
 
-### 某 AI 创业公司 <span>2024.07 - 2024.09</span>
-#### 算法实习生 <span>远程</span>
+### 某 AI 创业公司 *2024.07 - 2024.09*
+#### 算法实习生 *远程*
 
 - 参与多模态检索模块开发，负责图文对数据的清洗与去重流水线，处理 1,200 万条样本。
 - 复现并改进一篇 CVPR 论文的关键模块，在内部数据集上 Recall@10 提升 4.7 个点。
 
 ## 科研经历
 
-### 北邮模式识别实验室 <span>2024.03 - 至今</span>
-#### 本科生研究助理 · 导师：李某某 教授 <span>北京</span>
+### 北邮模式识别实验室 *2024.03 - 至今*
+#### 本科生研究助理 · 导师：李某某 教授 *北京*
 
 - 研究小样本场景下的图像分类，提出一种基于原型校准的方法，在 miniImageNet 上超过基线 2.1 个点。
 - 一作论文投稿至 ICASSP 2026，在审。
 
 ## 项目经历
 
-### 轻量级向量检索引擎 <span>2025.02 - 2025.05</span>
-#### 个人项目 · C++ / Python <span>[github.com/example/vecdb](https://github.com/example/vecdb)</span>
+### 轻量级向量检索引擎 *2025.02 - 2025.05*
+#### 个人项目 · C++ / Python *[github.com/example/vecdb](https://github.com/example/vecdb)*
 
 - 实现 HNSW 索引与磁盘分片，千万级向量下 Recall@10 达 0.97，单机 QPS 3,400。
 - 完整的压测报告与 Docker 部署脚本，累计 340 star。
 
-### 课程知识问答助手 <span>2024.10 - 2024.12</span>
-#### 团队 3 人 · 负责检索与评测 <span>RAG · 校内比赛一等奖</span>
+### 课程知识问答助手 *2024.10 - 2024.12*
+#### 团队 3 人 · 负责检索与评测 *RAG · 校内比赛一等奖*
 
 - 设计分块与重排策略，人工评测答案可用率从 61% 提升到 84%。
 - 建立 200 条题目的评测集，把「感觉变好了」变成可复现的数字。
