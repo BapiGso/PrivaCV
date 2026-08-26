@@ -12,7 +12,7 @@
         background-color: white;
     }
     
-    table, ul, ol {
+    table {
         width: 100%;
     }
     
