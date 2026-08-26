@@ -11,42 +11,33 @@
    没有时会自动退化成单栏。
    =========================================================== */
 
-:root {
-    --font-body: var(--font-sans);
-
-    --accent: #3d5a52;
-    --fs: 9.6pt;
-    --lh: 1.5;
-    --fs-name: 24pt;
-    --fs-sec: 9.8pt;
-
-    --page-x: 16mm;
-    --page-y: 15mm;
-    --sp-sec: 5.2mm;
-    --sp-item: 3.2mm;
-    --sp-line: 1.2mm;
-
-    --ink: #232725;
-    --muted: #6b716e;
-    --rule-soft: #dfe3e1;
-    --tint: rgba(61, 90, 82, 0.09);
+body {
+    padding: 15mm 16mm;
+    font-family: Inter, "Source Sans 3", "Helvetica Neue", Helvetica, Arial,
+                 "Segoe UI", Roboto, "PingFang SC", "Source Han Sans SC",
+                 "Microsoft YaHei", sans-serif;
+    font-size: 9.6pt;
+    line-height: 1.5;
+    color: #232725;
 }
 
 /* --- 通栏头部 --- */
 h1 {
     font-weight: 600;
+    font-size: 24pt;
     letter-spacing: -0.012em;
+    line-height: 1.15;
     margin: 0 0 1.4mm;
 }
 
 h1 + p {
-    font-size: calc(var(--fs) * 0.94);
+    font-size: 9.02pt;
     line-height: 1.55;
-    color: var(--accent);
+    color: #3d5a52;
     letter-spacing: 0.03em;
     margin: 0 0 5.4mm;
     padding-bottom: 3.4mm;
-    border-bottom: 1.6pt solid var(--accent);
+    border-bottom: 1.6pt solid #3d5a52;
 }
 
 /* --- 侧栏 34%，中间一条贯穿到底的发丝线 --- */
@@ -55,7 +46,7 @@ h1 + p {
     grid-template-columns: 34% 1fr;
     column-gap: 9mm;
     align-items: start;
-    background: linear-gradient(var(--rule-soft), var(--rule-soft)) no-repeat;
+    background: linear-gradient(#dfe3e1, #dfe3e1) no-repeat;
     background-size: 0.4pt 100%;
     background-position: calc(34% + 4.5mm) 0;
 }
@@ -63,30 +54,56 @@ h1 + p {
 .cv-grid > .main { padding-left: 1mm; }
 
 h2 {
-    color: var(--accent);
+    color: #3d5a52;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.13em;
-    font-size: var(--fs-sec);
-    margin: var(--sp-sec) 0 1.8mm;
+    font-size: 9.8pt;
+    line-height: 1.25;
+    margin: 5.2mm 0 1.8mm;
 }
+
+/* 两栏各自的头一个章节标题贴着栏顶 */
+.sidebar h2:first-of-type,
+.main h2:first-of-type { margin-top: 0; }
 
 .main h2 {
     padding-bottom: 0.9mm;
-    border-bottom: 0.5pt solid var(--rule-soft);
+    border-bottom: 0.5pt solid #dfe3e1;
 }
 
-h3 { font-weight: 600; }
+h3 {
+    font-weight: 600;
+    font-size: 9.6pt;
+    line-height: 1.3;
+    margin: 3.2mm 0 0;
+}
 
 h4 {
-    color: var(--muted);
+    color: #6b716e;
     font-style: italic;
+    font-weight: 400;
+    font-size: 8.83pt;
+    line-height: 1.35;
+    margin: 0.4mm 0 1.2mm;
 }
 
-[data-split] { gap: 3mm; }
-[data-split] > .x { font-size: 0.9em; }
+/* 时间和地点：斜体写在标题末尾，浮到右边 */
+h3 em, h4 em {
+    float: right;
+    font-weight: 400;
+    font-size: 0.9em;
+    font-variant-numeric: tabular-nums;
+}
+h3 em { font-style: normal; }
 
-li::marker { color: var(--accent); }
+/* 左栏只有 34% 宽，浮动会把标题挤散，在那儿就当普通斜体 */
+.sidebar h3 em, .sidebar h4 em { float: none; }
+
+p { margin: 0 0 1.2mm; }
+ul, ol { margin: 1.2mm 0 1.8mm; padding-left: 4.6mm; }
+li { margin: 0 0 0.9mm; }
+li::marker { color: #3d5a52; font-size: 0.9em; }
 
 /* 侧栏是一张清单，不是正文：无项目符号、行距更紧 */
 .sidebar { font-size: 0.97em; }
@@ -99,7 +116,7 @@ li::marker { color: var(--accent); }
     padding: 0;
     margin: 0.4mm 0 1.4mm;
     font-size: 0.94em;
-    color: var(--muted);
+    color: #6b716e;
 }
 
 /* 侧栏顶部放头像时自动裁成圆形 */
@@ -112,14 +129,26 @@ li::marker { color: var(--accent); }
     margin: 0 auto 4mm;
 }
 
-a { color: var(--accent); }
+a { color: #3d5a52; text-decoration: none; }
 h1 + p a { color: inherit; }
 
-code { color: var(--accent); border-radius: 1mm; }
+/* 行内 code 当技能标签用：浅底圆角，字体跟正文走 */
+code {
+    font-family: inherit;
+    font-size: 0.92em;
+    padding: 0.3mm 1.4mm;
+    border-radius: 1mm;
+    background: rgba(61, 90, 82, 0.09);
+    white-space: nowrap;
+    color: #3d5a52;
+}
 
-blockquote { border-left-color: var(--accent); }
-
-td:first-child { width: 20mm; color: var(--accent); }
+blockquote {
+    margin: 1.2mm 0;
+    padding: 0 0 0 3.5mm;
+    border-left: 1.2pt solid #3d5a52;
+    color: #6b716e;
+}
 </style>
 
 # Wei Chen
@@ -172,16 +201,16 @@ Backend engineer with 7 years building payment and messaging infrastructure at s
 
 ## Experience
 
-### Regional Fintech Platform <span>2021 – present</span>
-#### Senior Software Engineer, Payments Core <span>Singapore</span>
+### Regional Fintech Platform *2021 – present*
+#### Senior Software Engineer, Payments Core *Singapore*
 
 - Led the migration of the settlement ledger from a single Postgres instance to a sharded, event-sourced design; sustained 12k TPS at peak with zero reconciliation discrepancies across 18 months.
 - Introduced idempotency keys and an outbox pattern across 11 services, eliminating a class of duplicate-charge incidents that previously cost roughly SGD 40k per quarter in refunds.
 - Cut p99 authorization latency from 840 ms to 180 ms by replacing synchronous risk checks with a pre-computed decision cache.
 - Mentored 3 engineers; two were promoted within 18 months.
 
-### Regional E-Commerce Company <span>2018 – 2021</span>
-#### Software Engineer, Messaging Infrastructure <span>Singapore</span>
+### Regional E-Commerce Company *2018 – 2021*
+#### Software Engineer, Messaging Infrastructure *Singapore*
 
 - Built a push notification pipeline handling 400M messages/day with at-least-once delivery and per-tenant rate limiting.
 - Reduced infrastructure cost by 38% by replacing a fan-out-on-write design with fan-out-on-read for low-engagement segments.
@@ -189,8 +218,8 @@ Backend engineer with 7 years building payment and messaging infrastructure at s
 
 ## Selected Projects
 
-### Open-source rate limiter <span>2022 – present</span>
-#### Author · Go <span>[github.com/example/limiter](https://github.com/example/limiter)</span>
+### Open-source rate limiter *2022 – present*
+#### Author · Go *[github.com/example/limiter](https://github.com/example/limiter)*
 
 - Distributed token bucket backed by Redis, sub-millisecond overhead, 2.1k stars, used in production by several fintech teams.
 

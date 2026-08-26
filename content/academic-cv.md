@@ -10,57 +10,70 @@
    第二行对齐到第一行的文字，不对齐到序号）、表格当奖项年表用。
    =========================================================== */
 
-:root {
-    --font-body: var(--font-serif);
-
-    --fs: 10.2pt;
-    --lh: 1.45;
-    --fs-name: 19pt;
-    --fs-sec: 11.4pt;
-
-    --page-x: 19mm;
-    --page-y: 17mm;
-    --sp-sec: 5.8mm;
-    --sp-item: 3.4mm;
-    --sp-line: 1.6mm;
-
-    --ink: #1a1a1a;
-    --muted: #4f4f4f;
-    --rule: #333;
-    --rule-soft: #d8d8d8;
-    --tint: #f1f1ef;
+body {
+    padding: 17mm 19mm;
+    font-family: "Latin Modern Roman", XCharter, Charter, "Bitstream Charter",
+                 Palatino, Georgia, "Times New Roman", "Source Han Serif SC",
+                 "Songti SC", serif;
+    font-size: 10.2pt;
+    line-height: 1.45;
+    color: #1a1a1a;
 }
 
 h1 {
     font-weight: 400;
     font-variant: small-caps;
+    font-size: 19pt;
     letter-spacing: 0.045em;
+    line-height: 1.15;
     margin: 0 0 2mm;
 }
 
 h1 + p {
-    font-size: calc(var(--fs) * 0.92);
+    font-size: 9.38pt;
     line-height: 1.55;
-    margin: 0 0 var(--sp-sec);
+    color: #4f4f4f;
+    margin: 0 0 5.8mm;
     padding-bottom: 3.2mm;
-    border-bottom: 0.5pt solid var(--rule);
+    border-bottom: 0.5pt solid #333;
 }
 
 h2 {
     font-variant: small-caps;
     font-weight: 700;
+    font-size: 11.4pt;
+    line-height: 1.25;
     letter-spacing: 0.07em;
     padding-bottom: 0.7mm;
-    border-bottom: 0.4pt solid var(--rule-soft);
-    margin: var(--sp-sec) 0 2mm;
+    border-bottom: 0.4pt solid #d8d8d8;
+    margin: 5.8mm 0 2mm;
 }
 
-h3 { font-weight: 700; }
+h2:first-of-type { margin-top: 0; }
+
+h3 {
+    font-weight: 700;
+    font-size: 10.2pt;
+    line-height: 1.3;
+    margin: 3.4mm 0 0;
+}
 
 h4 {
     font-style: italic;
-    color: var(--muted);
+    font-weight: 400;
+    font-size: 9.38pt;
+    line-height: 1.35;
+    color: #4f4f4f;
+    margin: 0.4mm 0 1.6mm;
 }
+
+/* 时间和地点：斜体写在标题末尾，浮到右边 */
+h3 em, h4 em { float: right; font-weight: 400; font-variant-numeric: tabular-nums; }
+h3 em { font-style: normal; }
+
+p { margin: 0 0 1.6mm; }
+ul, ol { margin: 1.6mm 0 2.2mm; padding-left: 4.6mm; }
+li { margin: 0 0 0.9mm; }
 
 /* --- 论文列表：悬挂缩进 --- */
 ol {
@@ -83,36 +96,44 @@ ol > li::before {
     left: -8mm;
     width: 7mm;
     font-variant-numeric: tabular-nums;
-    color: var(--muted);
+    color: #4f4f4f;
 }
 
 ul { padding-left: 5mm; }
-li::marker { color: var(--ink); }
+li::marker { color: #1a1a1a; font-size: 0.9em; }
 
-/* --- 奖项 / 技能表：年份列窄一点，多页时表头照样不印 --- */
-td:first-child {
-    width: 18mm;
-    font-weight: 400;
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
-}
-
-td { padding: 0.9mm 0; }
-
+/* 行内 code 沿用灰底标签，只是字号收小一点 */
 code {
-    font-family: var(--font-mono);
+    font-family: inherit;
     font-size: 0.86em;
-    background: none;
-    padding: 0;
+    padding: 0.3mm 1.4mm;
+    border-radius: 0.8mm;
+    background: rgba(17, 17, 17, 0.06);
+    white-space: nowrap;
 }
 
-a { text-decoration: underline; text-underline-offset: 1.6pt; text-decoration-thickness: 0.4pt; }
+a { color: inherit; text-decoration: underline; text-underline-offset: 1.6pt; text-decoration-thickness: 0.4pt; }
 
 blockquote {
     border: 0;
     margin: 2mm 6mm;
     padding: 0;
     font-size: 0.96em;
+    color: #4f4f4f;
+}
+
+/* --- 奖项 / 技能表：年份列窄一点，多页时表头照样不印 --- */
+table { width: 100%; border-collapse: collapse; font-size: 0.96em; margin: 1.6mm 0 2.4mm; }
+thead { display: none; }
+td { padding: 0.9mm 0; vertical-align: top; }
+
+td:first-child {
+    width: 1px;
+    white-space: nowrap;
+    padding-right: 5mm;
+    font-weight: 400;
+    color: #4f4f4f;
+    font-variant-numeric: tabular-nums;
 }
 
 /* 多页时不要在章节标题后立刻断页 */
@@ -131,13 +152,13 @@ Machine learning systems, distributed training efficiency, and memory-aware sche
 
 ## Education
 
-### Tsinghua University <span>2021.09 – present</span>
-#### Ph.D. in Computer Science, advised by Prof. Wei Chen <span>Beijing, China</span>
+### Tsinghua University *2021.09 – present*
+#### Ph.D. in Computer Science, advised by Prof. Wei Chen *Beijing, China*
 
 Dissertation (in progress): *Memory-Aware Scheduling for Distributed Deep Learning*
 
-### Tsinghua University <span>2017.09 – 2021.06</span>
-#### B.Eng. in Computer Science and Technology, GPA 3.91/4.0 (rank 4/187) <span>Beijing, China</span>
+### Tsinghua University *2017.09 – 2021.06*
+#### B.Eng. in Computer Science and Technology, GPA 3.91/4.0 (rank 4/187) *Beijing, China*
 
 ## Publications
 
@@ -154,29 +175,29 @@ Dissertation (in progress): *Memory-Aware Scheduling for Distributed Deep Learni
 
 ## Research Experience
 
-### Microsoft Research Asia <span>2024.06 – 2024.12</span>
-#### Research Intern, Systems Group, mentor: Dr. Hao Lin <span>Beijing, China</span>
+### Microsoft Research Asia *2024.06 – 2024.12*
+#### Research Intern, Systems Group, mentor: Dr. Hao Lin *Beijing, China*
 
 - Designed a scheduler that overlaps checkpoint I/O with backward passes; reduced checkpoint stall time by 71% on a 512-GPU cluster.
 - Work contributed to a production training platform and formed the basis of the NSDI 2026 submission.
 
-### Tsinghua Parallel Computing Lab <span>2021.09 – present</span>
-#### Graduate Research Assistant <span>Beijing, China</span>
+### Tsinghua Parallel Computing Lab *2021.09 – present*
+#### Graduate Research Assistant *Beijing, China*
 
 - Built and maintain an open-source profiling toolkit for distributed training (480+ GitHub stars), adopted by three external research groups.
 - Led a two-year measurement study of a 2,000-GPU production cluster, resulting in the SoCC 2023 paper.
 
 ## Teaching
 
-### Tsinghua University <span>2022 – 2024</span>
-#### Teaching Assistant <span>Beijing, China</span>
+### Tsinghua University *2022 – 2024*
+#### Teaching Assistant *Beijing, China*
 
 - *Operating Systems* (undergraduate, ~180 students), Spring 2023, Spring 2024. Redesigned the scheduling lab; median completion rate rose from 62% to 89%.
 - *Advanced Computer Architecture* (graduate, ~40 students), Fall 2022.
 
 ## Awards and Honors
 
-| Year | Award |
+|  |  |
 |:--|:--|
 | 2025 | ACM SIGOPS Student Travel Grant |
 | 2024 | National Scholarship for Graduate Students (top 1%) |
@@ -196,7 +217,7 @@ Dissertation (in progress): *Memory-Aware Scheduling for Distributed Deep Learni
 
 ## Skills
 
-| Category | Details |
+|  |  |
 |:--|:--|
 | Programming | C++, Python, CUDA, Go, Rust |
 | Systems | PyTorch internals, NCCL, Kubernetes, Slurm, RDMA |

@@ -8,23 +8,15 @@
    纯黑白单栏，ATS 解析友好，工程岗海投的默认选择。
    =========================================================== */
 
-:root {
-    --font-body: var(--font-serif);
-
-    --fs: 10.4pt;
-    --lh: 1.38;
-    --fs-name: 23pt;
-    --fs-sec: 12pt;
-
-    --page-x: 15mm;
-    --page-y: 13mm;
-    --sp-sec: 4.8mm;
-    --sp-item: 2.8mm;
-    --sp-line: 1mm;
-
-    --rule: #000;
-    --muted: #1a1a1a;
-    --tint: #f0f0ee;
+body {
+    padding: 13mm 15mm;
+    font-family: XCharter, Charter, "Bitstream Charter", Palatino, Georgia,
+                 "Times New Roman", "Source Han Serif SC", "Songti SC", serif;
+    font-size: 10.4pt;
+    line-height: 1.38;
+    color: #111;
+    orphans: 2;
+    widows: 2;
 }
 
 /* --- \Huge\scshape 居中姓名 --- */
@@ -32,16 +24,17 @@ h1 {
     text-align: center;
     font-variant: small-caps;
     font-weight: 400;
+    font-size: 23pt;
     letter-spacing: 0.035em;
+    line-height: 1.15;
     margin: 0 0 1.4mm;
 }
 
 h1 + p {
     text-align: center;
-    color: var(--ink);
-    font-size: calc(var(--fs) * 0.92);
+    font-size: 9.6pt;
     line-height: 1.45;
-    margin: 0 0 var(--sp-sec);
+    margin: 0 0 4.8mm;
 }
 
 /* 原版把链接加了下划线，这里保留 */
@@ -55,37 +48,50 @@ h1 + p a {
 h2 {
     font-variant: small-caps;
     font-weight: 400;
+    font-size: 12pt;
     letter-spacing: 0.04em;
     padding-bottom: 0.5mm;
-    border-bottom: 0.6pt solid var(--rule);
-    margin: var(--sp-sec) 0 1.4mm;
+    border-bottom: 0.6pt solid #000;
+    margin: 4.8mm 0 1.4mm;
 }
 
+h2:first-of-type { margin-top: 0; }
+
 /* --- \resumeSubheading --- */
-h3 { font-weight: 700; }
+h3 {
+    font-size: 1em;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 2.8mm 0 0;
+}
 
 h4 {
     font-style: italic;
-    color: var(--ink);
-    font-size: calc(var(--fs) * 0.94);
+    font-weight: 400;
+    font-size: 9.8pt;
+    line-height: 1.35;
+    margin: 0.4mm 0 1mm;
 }
 
-h3 > .x { color: var(--ink); }
-h4 > .x { font-style: italic; color: var(--ink); }
+/* 时间和地点：斜体写在标题末尾，浮到右边 */
+h3 em, h4 em { float: right; font-weight: 400; font-variant-numeric: tabular-nums; }
+h3 em { font-style: normal; }
 
 /* 原版的 item 是个很小的 \bullet，缩进也很浅 */
-ul { padding-left: 5.2mm; }
-li::marker { font-size: 0.7em; color: var(--ink); }
+p { margin: 0 0 1mm; }
+ul { margin: 1mm 0 1.6mm; padding-left: 5.2mm; }
 li { margin-bottom: 0.7mm; }
+li::marker { font-size: 0.7em; }
+a { color: inherit; text-decoration: none; }
 
-code {
-    font-family: var(--font-body);
-    background: none;
-    padding: 0;
-    font-size: 1em;
-}
+/* 行内 code 就是普通文字，只是用来标技能词 */
+code { font-family: inherit; font-size: 1em; }
 
-td:first-child { width: 22mm; font-weight: 700; }
+/* GFM 要求表格有表头行，留空即可；这里把它藏起来 */
+table { width: 100%; border-collapse: collapse; margin: 1mm 0 1.8mm; }
+thead { display: none; }
+td { padding: 0.7mm 0; vertical-align: top; }
+td:first-child { width: 1px; white-space: nowrap; padding-right: 4mm; font-weight: 700; }
 </style>
 
 # 张明远
@@ -101,16 +107,16 @@ td:first-child { width: 22mm; font-weight: 700; }
 
 ## 工作经历
 
-### 某电商平台 · 基础架构部 <span>2021.06 - 至今</span>
-#### 高级后端工程师 <span>上海</span>
+### 某电商平台 · 基础架构部 *2021.06 - 至今*
+#### 高级后端工程师 *上海*
 
 - 主导订单中心从单体拆分为 6 个微服务，梳理出 40+ 处隐式耦合，迁移期间零事故，发布频率从每两周一次提升到每天 3 次。
 - 重构订单查询链路：引入 ClickHouse 做冷数据归档 + Redis 二级缓存，P99 从 1.8s 降到 210ms，MySQL 主库 QPS 下降 63%。
 - 设计并落地全链路压测方案，在大促前发现 3 个会导致雪崩的线程池配置问题；当年双十一峰值 8.2 万 QPS，服务可用性 99.99%。
 - 推动组内接入 OpenTelemetry，把平均故障定位时间（MTTR）从 47 分钟压到 12 分钟。
 
-### 某出行科技公司 <span>2019.03 - 2021.05</span>
-#### 后端工程师 <span>杭州</span>
+### 某出行科技公司 *2019.03 - 2021.05*
+#### 后端工程师 *杭州*
 
 - 负责派单引擎的匹配模块，用空间索引替换全量扫描，单次匹配耗时从 380ms 降到 45ms，支撑日均 200 万订单。
 - 搭建基于 Kafka 的订单事件总线，替换原有的定时轮询同步，下游 5 个业务方的数据延迟从分钟级降到秒级。
@@ -118,20 +124,20 @@ td:first-child { width: 22mm; font-weight: 700; }
 
 ## 项目经历
 
-### 轻量级配置中心（开源，1.2k Star） <span>2022 - 至今</span>
-#### 个人项目 · Go <span>[github.com/example/conf](https://github.com/example/conf)</span>
+### 轻量级配置中心（开源，1.2k Star） *2022 - 至今*
+#### 个人项目 · Go *[github.com/example/conf](https://github.com/example/conf)*
 
 - 基于 Raft 实现的配置中心，支持灰度发布与秒级回滚，单节点内存占用 < 30MB。
 - 被 3 家公司用于生产环境，累计处理 issue 80+，合并外部 PR 24 个。
 
 ## 教育背景
 
-### 华东师范大学 <span>2015.09 - 2019.06</span>
-#### 计算机科学与技术 · 本科 <span>GPA 3.7/4.0</span>
+### 华东师范大学 *2015.09 - 2019.06*
+#### 计算机科学与技术 · 本科 *GPA 3.7/4.0*
 
 ## 其他
 
-| 标签 | 内容 |
+|  |  |
 |:--|:--|
 | 语言 | 中文（母语）、英语（CET-6，可无障碍阅读技术文档） |
 | 输出 | 技术博客 60+ 篇，累计阅读 30 万；GopherChina 2023 分享嘉宾 |
