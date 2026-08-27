@@ -955,6 +955,11 @@
     const BASE_CSS = `
 @page { size: A4; margin: 0; }
 
+/* 210×297mm 是纸的外框——页边距长在纸里面，不是把纸撑大。CSS 默认的
+   content-box 会把文档 <style> 里的 padding 加到 210mm 之外，预览 iframe
+   就横向溢出、出滚动条。只钉 html/body 两层，元素内部的盒模型仍归文档自己。 */
+html, body { box-sizing: border-box; }
+
 html { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 body { width: 210mm; min-height: 297mm; margin: 0; background: #fff; }
 img { max-width: 100%; }
